@@ -291,31 +291,67 @@ video_generator = VideoGenerator(image_generator)
 print("✅ Generators ready")
 
 # ============================================================
+# STEP 7b: Load secrets from Colab userdata
+# ============================================================
+try:
+    from google.colab import userdata as _colab_userdata
+    _COLAB_AVAILABLE = True
+except Exception:
+    _COLAB_AVAILABLE = False
+    class _colab_userdata:
+        @staticmethod
+        def get(key, default=""):
+            return os.environ.get(key, default or "")
+
+# Pull BEAULIX_FRONTEND_URL from Colab Secrets first, fall back to env var
+_frontend_url = ""
+if _COLAB_AVAILABLE:
+    try:
+        _frontend_url = _colab_userdata.get("BEAULIX_FRONTEND_URL") or ""
+    except Exception:
+        pass
+if not _frontend_url:
+    _frontend_url = os.environ.get("BEAULIX_FRONTEND_URL", "")
+
+# Copy music files from Colab upload area to outputs dir so VideoGenerator finds them
+import glob as _glob
+_music_src = _glob.glob("/content/bg_music_*.mp3")
+if _music_src:
+    import shutil as _shutil
+    for _f in _music_src:
+        _dst = f"/content/beaulix_outputs/{os.path.basename(_f)}"
+        if not os.path.exists(_dst):
+            _shutil.copy(_f, _dst)
+    print(f"🎵 Copied {len(_music_src)} music track(s) to outputs dir")
+os.environ["BEAULIX_MUSIC_DIR"] = "/content/beaulix_outputs"
+
+# ============================================================
 # STEP 8: FastAPI App
 # ============================================================
 app = FastAPI(title="Beaulix")
 
 # ⚠️  SECURITY: Restrict CORS to known origins.
-# Add every origin your frontend might be served from.
-# VS Code Live Server defaults to port 5500; adjust if yours differs.
 _gpu_allowed_origins = list(filter(None, [
-    os.environ.get("BEAULIX_FRONTEND_URL", ""),  # set this in production
+    _frontend_url,                          # from Colab Secrets → BEAULIX_FRONTEND_URL
+    "https://beaulix-model.web.app",        # Firebase Hosting production origin
     "http://localhost:5000",
     "http://127.0.0.1:5000",
-    "http://localhost:5500",       # VS Code Live Server
-    "http://127.0.0.1:5500",      # VS Code Live Server (127 variant)
-    "http://localhost:3000",       # common dev servers
+    "http://localhost:5500",                # VS Code Live Server
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]))
 
-if not any(os.environ.get("BEAULIX_FRONTEND_URL", "")):
+if not _frontend_url:
     import sys as _sdxl_sys
     _sdxl_sys.stderr.write(
         "WARNING: BEAULIX_FRONTEND_URL is not set. CORS is restricted to localhost only.\n"
-        "Set os.environ['BEAULIX_FRONTEND_URL'] = 'https://your-project.web.app' before starting.\n"
+        "Add BEAULIX_FRONTEND_URL to Colab Secrets (e.g. https://beaulix-model.web.app).\n"
     )
+else:
+    print(f"✅ CORS enabled for: {_frontend_url}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -329,12 +365,11 @@ app.add_middleware(
 # Set BEAULIX_API_KEY in Colab Secrets (userdata) before starting the server.
 # The frontend must send the same value in the X-Beaulix-API-Key header.
 _GPU_API_KEY: str = ""
-try:
-    from google.colab import userdata as _colab_userdata
-    _GPU_API_KEY = _colab_userdata.get("BEAULIX_API_KEY") or ""
-except Exception:
-    pass  # running outside Colab; key can also be set via os.environ
-
+if _COLAB_AVAILABLE:
+    try:
+        _GPU_API_KEY = _colab_userdata.get("BEAULIX_API_KEY") or ""
+    except Exception:
+        pass
 if not _GPU_API_KEY:
     _GPU_API_KEY = os.environ.get("BEAULIX_API_KEY", "")
 
@@ -454,7 +489,6 @@ print("🔌 STARTING TUNNEL")
 print("="*60)
 
 from pyngrok import ngrok
-# google.colab.userdata already imported above for BEAULIX_API_KEY
 ngrok.set_auth_token(_colab_userdata.get("NGROK_AUTH_TOKEN"))
 tunnel = ngrok.connect(8000)
 public_url = tunnel.public_url
