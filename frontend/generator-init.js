@@ -14,8 +14,9 @@
     const VIDEO_LOAD_TIMEOUT = 180000;
     const DEBUG = false; // set true locally to enable verbose console output
 
-    // ML backend base URL — read from Firestore config/backend on load.
+    // ML backend base URL and API key — read from Firestore on load.
     let _mlBackendUrl  = null;
+    let _mlApiKey      = null;
 
     // Single config namespace — avoids polluting window with individual globals.
     window.BEAULIX_CONFIG = {
@@ -49,9 +50,10 @@
         // Firestore rules allow authenticated reads of config/gpu and config/backend.
         try {
           const db = getFirestore(app);
-          const [gpuDoc, backendDoc] = await Promise.all([
+          const [gpuDoc, backendDoc, apiKeyDoc] = await Promise.all([
             getDoc(doc(db, 'config', 'gpu')),
             getDoc(doc(db, 'config', 'backend')),
+            getDoc(doc(db, 'config', 'apiKey')),
           ]);
 
           const gpuUrl = gpuDoc.exists() ? gpuDoc.data()?.url : null;
@@ -66,6 +68,7 @@
           }
 
           _mlBackendUrl = backendDoc.exists() ? backendDoc.data()?.url : null;
+          _mlApiKey     = apiKeyDoc.exists() ? (apiKeyDoc.data()?.key ?? apiKeyDoc.data()?.value ?? null) : null;
           if (!_mlBackendUrl) {
             if (DEBUG) console.warn('config/backend doc missing — ML engine unavailable.');
           } else {
@@ -768,8 +771,7 @@
         const token = await getAuth(app).currentUser?.getIdToken();
         const mlRes = await fetchWithTimeout(`${_mlBackendUrl}/predict`, {
           method: 'POST', timeout: FETCH_TIMEOUT,
-          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-          body: JSON.stringify(payload),
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}), ...(_mlApiKey ? { 'X-Beaulix-API-Key': _mlApiKey } : {}) },
         });
         if (!mlRes.ok) { const err = await mlRes.json().catch(() => ({})); throw new Error(err.detail || `ML error ${mlRes.status}`); }
         const responseData = await mlRes.json();
@@ -814,7 +816,7 @@
           const token = await getAuth(app).currentUser?.getIdToken();
           const s2Res = await fetchWithTimeout(`${_mlBackendUrl}/predict-step2`, {
             method: 'POST', timeout: FETCH_TIMEOUT,
-            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}), ...(_mlApiKey ? { 'X-Beaulix-API-Key': _mlApiKey } : {}) },
             body: JSON.stringify(step2Payload),
           });
           if (s2Res.ok) step2PredictionData = await s2Res.json();
