@@ -1,4 +1,7 @@
 // firebase-config.js — single source of truth for Firebase configuration.
+// Install the console.warn suppressor FIRST, before any Firebase module runs,
+// so the feature_collector "deprecated parameters" warning is swallowed.
+import './suppress-firebase-warn.js';
 // Import from this file in every HTML module script instead of copy-pasting the config.
 //
 // Uses the /__/firebase/init.js auto-config pattern provided by Firebase Hosting.
