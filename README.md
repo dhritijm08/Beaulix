@@ -1,18 +1,44 @@
 # Beaulix ✨
 
-AI-powered beauty and wellness recommendation platform. Enter your audience profile and product category; Beaulix returns predicted performance metrics (CTR, conversion, engagement), AI-generated ad copy, audience targeting suggestions, and visual brief recommendations — all powered by Random Forest models trained on a 97,920+ row dataset.
+**AI-Based Decision Intelligence for Beauty Ads**
+
+Beaulix is a web-based decision intelligence platform for beauty and cosmetics brands. Provide your audience profile and product details — Beaulix returns predicted ad performance metrics (CTR, conversion, engagement), AI-generated ad copy, audience targeting recommendations, and visual brief suggestions, all powered by a Random Forest model trained on a 97,920+ row dataset. Optionally, generate advertisement visuals using Stable Diffusion XL on a GPU backend.
+
+> 3rd Year BCA 'A' Project — Department of Computer Science, Mount Carmel College (Autonomous), Bengaluru, 2025–2026  
+> Author: Dhriti Jagan Mohan
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [System Architecture](#system-architecture)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Installation & Setup](#installation--setup)
+- [Environment Variables](#environment-variables)
+- [API Reference](#api-reference)
+- [GPU / Colab Setup (Optional)](#gpu--colab-setup-optional)
+- [Deployment](#deployment)
+- [Security](#security)
+- [Testing](#testing)
+- [Known Limitations](#known-limitations)
+- [Future Enhancements](#future-enhancements)
+- [License](#license)
 
 ---
 
 ## Features
 
-- **Two-step recommendation flow** — Step 1 predicts baseline performance; Step 2 refines predictions after the user selects creative choices (brand style, aspect ratio, output type) and returns a before/after improvement delta
+- **Two-step recommendation flow** — Step 1 predicts baseline performance; Step 2 refines predictions after you select creative choices (brand style, aspect ratio, output type) and returns a before/after delta
+- **Predicted performance metrics** — CTR, conversion rate, and engagement rate with a confidence score and percentile rank against similar profiles
 - **AI-generated ad copy** — hook, headline, description, CTA, and offer per request
 - **Audience targeting** — platform suggestions, tone, and demographic targeting
 - **Visual brief** — shot type, lighting, colour palette, and styling recommendations
-- **Confidence scoring** — percentile rank against similar profiles in the dataset
+- **Optional AI visual generation** — SDXL image and video generation on a Colab GPU backend (images: ~20–30 s; videos: ~1–2 min)
 - **Recommendation history** — per-user history stored in Firestore
-- **User auth** — login, signup, password reset via Firebase Authentication
+- **User auth** — login, signup, and password reset via Firebase Authentication
 - **Avatar uploads** — Cloudinary integration via Firebase Cloud Functions (API key never exposed to browser)
 - **Rate limiting** — SlowAPI (30 req/min on prediction endpoints)
 - **Background retraining** — model retrains in a dedicated thread pool on new predictions without blocking inference
@@ -21,11 +47,17 @@ AI-powered beauty and wellness recommendation platform. Enter your audience prof
 
 ## How It Works
 
-1. **Step 1** — User fills in product category, audience profile, and marketing attributes. The FastAPI backend runs Random Forest inference and returns predicted CTR, conversion rate, engagement rate, ad copy, audience targeting, and visual brief recommendations.
+**Step 1 — Marketing Strategy Analysis**  
+Fill in product category, audience profile, occasion, and marketing attributes. The FastAPI backend runs Random Forest inference and returns predicted CTR, conversion rate, engagement rate, confidence score, ad copy, audience targeting, and visual brief recommendations.
 
-2. **Step 2** — User selects creative choices (brand style, aspect ratio, output type) from the Step 1 recommendations. The backend re-runs predictions with these additional inputs and returns a delta showing the improvement over baseline.
+**Step 2 — Visual Generation**  
+Select creative choices (brand style, aspect ratio, output type) from the Step 1 recommendations. The backend re-runs predictions with these additional inputs and returns a delta showing the improvement over the baseline.
 
-3. **Visual Generation (optional)** — The GPU-hosted Colab server generates images and videos via SDXL based on the visual brief. The ngrok tunnel URL is written to Firestore by Colab on startup; the frontend reads it via the `getGpuUrl` Cloud Function.
+**Visual Generation (optional)**  
+The GPU-hosted Colab server generates images and videos via SDXL based on the visual brief. The ngrok tunnel URL is written to Firestore by Colab on startup; the frontend reads it via the `getGpuUrl` Cloud Function.
+
+**Overall Flow**  
+`User Input → Input Processing → ML Prediction → AI Generation → Output Display → Data Storage`
 
 ---
 
@@ -36,16 +68,16 @@ Browser (Firebase Hosting)
     │
     ├── Firebase Auth          ← login / signup / password reset
     ├── Firestore              ← history, user data, GPU URL
-    └── Firebase Functions     ← Cloudinary proxy, ML key relay
+    └── Firebase Functions     ← Cloudinary proxy, ML key relay, GPU URL relay
              │
              └── FastAPI Backend (Render)
                       │
-                      ├── Random Forest Models
-                      ├── Excel Data Cache
-                      └── Background Retrain Pool
+                      ├── Random Forest Models (sklearn)
+                      ├── Excel Data Cache (openpyxl)
+                      └── Background Retrain Thread Pool
 
-GPU (Google Colab + ngrok)
-    └── SDXL image/video generation (optional)
+GPU (Google Colab + ngrok)   [optional]
+    └── SDXL image/video generation
 ```
 
 ---
@@ -128,17 +160,25 @@ Beaulix/
 |---|---|
 | Frontend | HTML5, CSS3, vanilla JavaScript (ES modules) |
 | Backend | Python 3, FastAPI, Uvicorn |
-| ML | Scikit-learn (Random Forest), Pandas, NumPy |
+| ML | Scikit-learn (Random Forest Regressor), Pandas, NumPy |
 | Auth & DB | Firebase Authentication, Firestore |
 | Hosting | Firebase Hosting (frontend), Render (backend) |
-| Media | Cloudinary (avatar uploads) |
+| Media Storage | Cloudinary (avatar uploads) |
 | Cloud Functions | Node 18, Firebase Functions v4 |
-| Rate Limiting | SlowAPI |
-| Image Generation | Stable Diffusion XL (optional, Colab/GPU only) |
+| Rate Limiting | SlowAPI (30 req/min per IP) |
+| Image/Video Generation | Stable Diffusion XL (SDXL) — optional, GPU/Colab only |
+| API Tunnel | ngrok (Colab ↔ frontend) |
 
 ---
 
 ## Installation & Setup
+
+### Prerequisites
+
+- Python 3.10+ (see `backend/.python-version`)
+- Node 18+
+- Firebase CLI (`npm install -g firebase-tools`)
+- A Firebase project with Authentication and Firestore enabled
 
 ### 1. Clone the Repository
 
@@ -177,19 +217,19 @@ bash start.sh
 uvicorn server:app --reload
 ```
 
-Backend runs at `http://127.0.0.1:8000`.
+The backend runs at `http://127.0.0.1:8000`.
 
 > **Note:** On first start the server loads `beaulix_combinatorial_predictions.xlsx` (~14 MB) and three Random Forest models. This takes 30–90 seconds. The port binds immediately; requests during this window receive HTTP 503.
 
 ### 3. Frontend Setup (Local Dev)
 
-Serve the `frontend/` directory via a proper local server (not by opening HTML files directly — ES modules require HTTP):
+Serve the `frontend/` directory via a local HTTP server (ES modules require HTTP — do not open HTML files directly from the filesystem):
 
 ```bash
 # Python
 python -m http.server 5500 --directory frontend
 
-# npx (also supports proper 404 routing)
+# npx
 npx serve frontend
 
 # VS Code: use the Live Server extension
@@ -197,25 +237,24 @@ npx serve frontend
 
 Open `http://127.0.0.1:5500`.
 
-> **Important:** Do not open HTML files directly from the filesystem (`file://`). ES module imports and canvas operations are blocked by the browser under `file://` origins.
-
 ### 4. Firebase Setup
 
 1. Create a Firebase project and enable Authentication and Firestore.
-2. Deploy Cloud Functions:
+2. Update `frontend/firebase-config.js` with your project's config.
+3. Deploy Cloud Functions:
    ```bash
    cd functions
    npm install
    firebase deploy --only functions
    ```
-3. Set required Firebase Secrets:
+4. Set required Firebase Secrets:
    ```bash
    firebase functions:secrets:set BEAULIX_API_KEY
    firebase functions:secrets:set CLOUDINARY_CLOUD_NAME
    firebase functions:secrets:set CLOUDINARY_API_KEY
    firebase functions:secrets:set CLOUDINARY_API_SECRET
    ```
-4. Deploy the frontend:
+5. Deploy the frontend:
    ```bash
    firebase deploy --only hosting
    ```
@@ -230,33 +269,21 @@ pytest
 
 ---
 
-## GPU / Colab Setup (Optional)
-
-Image and video generation requires a GPU. The recommended setup is Google Colab + ngrok:
-
-1. Open `colab/sdxl_model.py` in Google Colab (use a T4 or A100 runtime).
-2. Run all cells. The script starts an ngrok tunnel and writes the tunnel URL to Firestore at `config/gpu`.
-3. The frontend reads this URL via the `getGpuUrl` Cloud Function when the generator page loads.
-
-Expected generation times: ~20–30 seconds for images, ~1–2 minutes for videos.
-
----
-
 ## Environment Variables
 
-All variables are documented in `.env.example`. Required variables for production:
+All variables are documented in `.env.example`. Copy it to `.env` and fill in your values before running locally or deploying. Never commit `.env` to version control.
 
 | Variable | Required | Description |
 |---|---|---|
 | `BEAULIX_API_KEY` | **Yes (prod)** | Shared secret sent as `X-Beaulix-API-Key` header. Server refuses to start in production without it. |
-| `BEAULIX_FRONTEND_URL` | **Yes (prod)** | Exact Firebase Hosting URL for CORS allow-list. |
+| `BEAULIX_FRONTEND_URL` | **Yes (prod)** | Exact Firebase Hosting URL for CORS allow-list (e.g. `https://your-project.web.app`). |
 | `BEAULIX_ENV` | No | `production` / `development` / `staging` / `test`. Defaults to dev mode. |
 | `CLOUDINARY_CLOUD_NAME` | For uploads | From Firebase Secrets / Cloudinary dashboard. |
 | `CLOUDINARY_API_KEY` | For uploads | From Firebase Secrets. |
 | `CLOUDINARY_API_SECRET` | For uploads | From Firebase Secrets. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | For Firebase Admin | Full JSON content of the Admin SDK key. Never commit as a file. |
-| `MANAGED_DEPLOY` | Managed hosts | Set to `1` on Render / Railway / Fly.io. **Required** — without it health checks see the shell script, not uvicorn. |
-| `BEAULIX_MUSIC_DIR` | Colab only | Directory for audio assets. Defaults to `/content`. |
+| `MANAGED_DEPLOY` | Managed hosts | Set to `1` on Render / Railway / Fly.io. Required — without it health checks see the shell wrapper, not uvicorn. |
+| `BEAULIX_MUSIC_DIR` | Colab only | Directory for audio assets on the Colab runtime. Defaults to `/content`. |
 
 ---
 
@@ -287,7 +314,7 @@ Step 1 — baseline prediction.
 }
 ```
 
-Valid values:
+**Valid values:**
 
 | Field | Valid values |
 |---|---|
@@ -328,7 +355,7 @@ Step 2 — re-predicts after creative choices are made. Extends the Step 1 body 
 }
 ```
 
-Returns Step 1 baseline, Step 2 updated scores, absolute delta, and percentage change for the frontend improvement banner.
+Returns Step 1 baseline, Step 2 updated scores, absolute delta, and percentage change.
 
 ### `GET /visual-recommendations`
 Returns visual brief data filtered by query parameters (same fields as `PredictionRequest`).
@@ -341,20 +368,34 @@ Returns row count, column names, and category distribution from the training dat
 
 ---
 
+## GPU / Colab Setup (Optional)
+
+Image and video generation requires a GPU. The recommended setup is Google Colab + ngrok:
+
+1. Open `colab/sdxl_model.py` in Google Colab (T4 or A100 runtime).
+2. Run all cells. The script starts an ngrok tunnel and writes the tunnel URL to Firestore at `config/gpu`.
+3. The frontend reads this URL via the `getGpuUrl` Cloud Function when the generator page loads.
+
+Expected generation times: ~20–30 seconds for images, ~1–2 minutes for videos.
+
+> Colab sessions disconnect after ~12 hours; re-run the notebook to refresh the ngrok URL.
+
+---
+
 ## Deployment
 
 ### Backend
 
-**Minimum spec: 2 vCPUs, 4 GB RAM.**  
-The server retrains three Random Forest models in a background thread on each new prediction. On single-core or memory-constrained instances, retraining will peg CPU and may degrade prediction latency under sustained load. Consider Celery/RQ for async retraining at scale.
+**Minimum spec: 2 vCPUs, 4 GB RAM.**
+
+The server retrains three Random Forest models in a background thread on each new prediction. On single-core or memory-constrained instances, retraining will peg CPU and may degrade prediction latency under sustained load.
 
 Supported platforms: Render, Railway, AWS, Azure, Google Cloud.
 
-**⚠️ Managed platforms (Render, Railway, Fly.io): always set `MANAGED_DEPLOY=1`.**  
-Without it, the platform health checks see the shell script wrapper, not uvicorn — zero-downtime deploys and restart policies will behave incorrectly.
+**⚠️ Managed platforms (Render, Railway, Fly.io): always set `MANAGED_DEPLOY=1`.** Without it, the platform health checks see the shell script wrapper, not uvicorn — zero-downtime deploys and restart policies will behave incorrectly.
 
 ```bash
-# Render / Railway: add to environment variables
+# Add to environment variables on your managed host
 MANAGED_DEPLOY=1
 ```
 
@@ -366,24 +407,23 @@ For VPS deployments, prefer systemd or supervisord over `start.sh`.
 firebase deploy --only hosting
 ```
 
-The `firebase.json` is configured with `"404": "404.html"`, `cleanUrls: true`, and `trailingSlash: false` — Firebase Hosting serves the custom 404 page for any unknown URL with a real HTTP 404 status code.
+`firebase.json` is configured with `"404": "404.html"`, `cleanUrls: true`, and `trailingSlash: false`.
 
 ---
 
-## Security Features
+## Security
 
 - API key authentication on all prediction endpoints (`X-Beaulix-API-Key` header)
-- Rate limiting via SlowAPI (30 req/min per IP)
+- Rate limiting via SlowAPI — 30 req/min per IP
 - CORS restricted to `BEAULIX_FRONTEND_URL` in production
 - Input validation allowlists on all prediction fields (prevents dataset poisoning)
 - Separate thread pools for inference and retraining (inference never starved)
-- Firebase Admin SDK key never stored in repo — Render environment variable only
-- ML API key managed via Firebase Secrets (`BEAULIX_API_KEY`) — never sent to browser
-- Firebase warning suppressor loaded via `firebase-config.js` import so every page gets it automatically
+- Firebase Admin SDK key stored only as an environment variable — never committed to the repo
+- ML API key managed via Firebase Secrets — never sent to the browser
 
 ---
 
-## Testing Summary
+## Testing
 
 12 automated test cases across three modules, 100% pass rate:
 
@@ -393,29 +433,37 @@ The `firebase.json` is configured with `"404": "404.html"`, `cleanUrls: true`, a
 | `test_copy_engine.py` | Ad copy generation per category |
 | `test_targeting.py` | Platform and audience targeting |
 
+Run them with:
+
+```bash
+cd backend
+pytest
+```
+
 ---
 
 ## Known Limitations
 
-- Dataset is synthetic (97,920 generated rows); not sourced from live ad platform data.
-- Image/video generation requires a GPU and Google Colab — the backend itself has no GPU dependency.
+- Dataset is synthetic (97,920 generated rows) — not sourced from live ad platform data, so predictions are approximations rather than exact values.
+- Image/video generation requires a GPU and Google Colab — the FastAPI backend itself has no GPU dependency.
 - Colab sessions disconnect after ~12 hours; the ngrok URL must be refreshed by re-running the notebook.
-- Model retrains synchronously in a background thread; under high load, retrain latency can impact inference slightly.
+- Model retrains synchronously in a background thread; under high load, retrain latency can slightly impact inference. Consider Celery/RQ for async retraining at scale.
+- The system does not integrate real-time advertising platform data (Meta Ads, Google Ads); predictions are based on historical patterns only.
 
 ---
 
-## Future Improvements
+## Future Enhancements
 
-- User dashboard analytics
-- AI-generated beauty reports
-- Product recommendation marketplace
-- Social media sharing
-- Mobile app
-- Advanced AI personalization
-- Async retraining via job queue (Celery/RQ)
+- Real-time integration with Meta Ads and Google Ads APIs for live campaign data
+- Advanced ML models (deep learning, hybrid models) trained on larger real-world datasets
+- A/B testing dashboard and performance feedback loop
+- Mobile app support
+- Extended performance metrics (ROI, customer retention, long-term engagement)
+- Async model retraining via Celery/RQ
+- Multi-platform deployment support (cloud auto-scaling)
 
 ---
 
 ## License
 
-This project is intended for educational and development purposes.
+This project is intended for educational and development purposes (BCA Final Year Project, 2025–2026).
