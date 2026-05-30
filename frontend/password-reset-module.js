@@ -4,29 +4,37 @@
 
   const auth = getAuth(app);
 
-  // ── Mode detection (?mode=change → change-password flow; default → forgot-password flow) ──
+  // ── Mode detection — runs immediately, no async dependency ──
   const params = new URLSearchParams(window.location.search);
   const isChangeMode = params.get('mode') === 'change';
 
-  // Customise copy based on mode
-  if (isChangeMode) {
-    document.title = 'Beaulix - Change Password';
-    document.getElementById('pageHeading').textContent = 'Change your password';
-    document.getElementById('pageSubheading').textContent =
-      'Enter your account email and we\'ll send you a link to set a new password.';
-    document.getElementById('resetBtn').textContent = 'Send Change Link';
-    document.getElementById('resendBtn').textContent = 'Resend Change Link';
-    document.getElementById('backLink').href = 'profile.html';
-    document.getElementById('backLinkText').textContent = 'Back to Profile';
-    document.getElementById('successBackLink').href = 'profile.html';
-    document.getElementById('successBackLinkText').textContent = 'Back to Profile';
-  } else {
-    document.title = 'Beaulix - Reset Password';
-    document.getElementById('pageHeading').textContent = 'Forgot your password?';
-    document.getElementById('pageSubheading').textContent =
-      'No worries! Enter the email address associated with your account and we\'ll send you a link to reset your password.';
-    document.getElementById('resetBtn').textContent = 'Send Reset Link';
-    document.getElementById('resendBtn').textContent = 'Resend Reset Link';
+  function applyModeUI() {
+    if (isChangeMode) {
+      document.title = 'Beaulix - Change Password';
+      document.getElementById('pageHeading').textContent = 'Change your password';
+      document.getElementById('pageSubheading').textContent =
+        'Enter your account email and we\'ll send you a link to set a new password.';
+      document.getElementById('resetBtn').textContent = 'Send Change Link';
+      document.getElementById('resendBtn').textContent = 'Resend Change Link';
+      document.getElementById('backLink').href = 'profile.html';
+      document.getElementById('backLinkText').textContent = 'Back to Profile';
+      document.getElementById('successBackLink').href = 'profile.html';
+      document.getElementById('successBackLinkText').textContent = 'Back to Profile';
+    } else {
+      document.title = 'Beaulix - Reset Password';
+      document.getElementById('pageHeading').textContent = 'Forgot your password?';
+      document.getElementById('pageSubheading').textContent =
+        'No worries! Enter the email address associated with your account and we\'ll send you a link to reset your password.';
+      document.getElementById('resetBtn').textContent = 'Send Reset Link';
+      document.getElementById('resendBtn').textContent = 'Resend Reset Link';
+    }
+  }
+
+  // Apply immediately (DOM is already parsed since script is at end of body)
+  applyModeUI();
+  // Also apply on DOMContentLoaded as a safety net
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyModeUI);
   }
 
   const btnLabel = document.getElementById('resetBtn').textContent;
