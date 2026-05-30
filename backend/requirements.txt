@@ -1,0 +1,22 @@
+fastapi==0.115.6
+# ── Google Drive (used by download_data.py at build time) ──────────────
+google-auth==2.29.0
+google-api-python-client==2.126.0
+uvicorn==0.34.0
+scikit-learn==1.6.1
+pandas==2.2.2
+# numpy: 2.x is released — test compatibility with scikit-learn before upgrading.
+numpy==1.26.4
+python-multipart==0.0.12
+joblib==1.4.2
+pydantic==2.11.0
+# openpyxl: required to parse .xlsx training data. Once models/visual_data.pkl and
+# models/random_forest_models.pkl are pre-built at deploy time, openpyxl is only
+# needed for background retraining. Do not remove it — retraining reads Excel directly.
+openpyxl==3.1.2
+slowapi==0.1.9
+
+# ── Testing ────────────────────────────────────────────────────────────
+pytest==8.3.3
+pytest-mock==3.14.0
+httpx==0.28.1   # required by FastAPI's TestClient (starlette)

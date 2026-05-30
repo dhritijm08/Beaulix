@@ -1,0 +1,152 @@
+/* ========================================================
+   layout.css — Shared navbar and footer styles
+   Used by: index.html, generator.html, history.html, profile.html
+   ======================================================== */
+
+/* ================= NAVBAR ================= */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 70px;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ================= LOGO ================= */
+.logo-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 2px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.logo-tagline {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-top: -2px;
+}
+
+/* ================= NAV LINKS ================= */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 28px;
+}
+
+.nav-links a,
+.nav-home-link {
+  text-decoration: none;
+  color: var(--text-medium);
+  font-weight: 500;
+  position: relative;
+  padding: 4px 0;
+  transition: var(--transition);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+.nav-links a:hover,
+.nav-home-link:hover {
+  color: var(--primary);
+}
+
+.nav-links a::after,
+.nav-home-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after,
+.nav-home-link:hover::after {
+  width: 100%;
+}
+
+/* ================= NAV ACTIONS ================= */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.login-link {
+  text-decoration: none;
+  color: #000000;
+  font-weight: 500;
+  position: relative;
+  padding: 4px 0;
+  transition: var(--transition);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+.login-link:hover {
+  color: var(--primary);
+}
+
+/* ================= FOOTER ================= */
+footer {
+  background: #111111;
+  color: white;
+  padding: 30px 20px;
+  text-align: center;
+  margin-top: 2rem;
+  flex-shrink: 0;
+}
+
+.footer-copyright {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1100px) {
+  .navbar {
+    padding: 18px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .nav-links {
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

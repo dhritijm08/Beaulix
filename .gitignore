@@ -1,0 +1,93 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
+
+# Firebase
+.firebase/
+firebase.json
+firebase-config.js
+
+# Firebase service account keys (DO NOT COMMIT)
+beaulix-model-1fca694b7855.json
+beaulix-model-*.json
+*-firebase-adminsdk-*.json
+
+# Uncomment if each developer uses a different Firebase project
+# .firebaserc
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Grunt
+.grunt/
+
+# Bower
+bower_components/
+
+# Node
+node_modules/
+.npm/
+.eslintcache
+.node_repl_history
+.lock-wscript
+build/Release/
+*.tgz
+.yarn-integrity
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dataconnect
+.dataconnect/
+
+# Python virtual environments
+.venv/
+venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*$py.class
+
+# Training data and model artifacts
+backend/*.xlsx
+backend/models/*.pkl
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build outputs
+dist/
+build/
+out/
+
+# Temporary files
+tmp/
+temp/
+
+# Misc
+*.bak
+*.swp
+*.swo

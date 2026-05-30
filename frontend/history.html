@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beaulix - History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="layout.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    ::selection { background-color:rgba(201,164,107,0.3); color:#000; }
+    body { font-family:'Inter',sans-serif; background:linear-gradient(#fff,var(--bg-light)); color:var(--text-dark); min-height:100vh; display:flex; flex-direction:column; visibility:hidden; }
+
+    .nav-home-link { text-decoration: none; color: var(--text-medium); font-weight: 500; position: relative; padding: 4px 0; transition: color 0.3s ease; text-transform: uppercase; font-size: 13px; letter-spacing: 1.5px; }
+    .nav-home-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px; background: var(--primary); transition: width 0.3s ease; }
+    .nav-home-link:hover { color: var(--primary); }
+    .nav-home-link:hover::after { width: 100%; }
+    .user-profile { cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; overflow: hidden; border: 2px solid transparent; }
+    .user-profile:hover { border-color: var(--primary); }
+    .user-profile img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .user-dropdown { position: absolute; top: 70px; right: 5%; background: white; border: 1px solid var(--border); padding: 1.5rem; min-width: 250px; display: none; z-index: 1000; box-shadow: var(--shadow); }
+    .user-dropdown.show { display: block; animation: slideDown 0.3s ease; }
+    .user-info { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .user-name { font-weight: 600; margin-bottom: 0.2rem; display: block; color: var(--text-dark); text-decoration: none; cursor: pointer; transition: all 0.3s ease; }
+    .user-name:hover { color: var(--primary); }
+    .user-email { color: var(--text-light); font-size: 0.8rem; }
+    .sign-out-btn { width: 100%; padding: 0.8rem; background: var(--bg-light); border: 1px solid var(--border); color: var(--text-medium); cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', sans-serif; }
+    .sign-out-btn:hover { background: var(--error); color: white; border-color: var(--error); }
+    .profile-link-btn { display:flex; align-items:center; gap:10px; width:100%; padding:12px 16px; background:none; border:none; border-bottom:1px solid var(--border); color:#111; font-size:14px; font-weight:500; font-family:'Inter',sans-serif; text-decoration:none; cursor:pointer; transition:all 0.3s; }
+    .profile-link-btn:hover { background:var(--bg-light); color:var(--primary); }
+    .profile-link-btn svg { stroke:var(--primary); }
+
+    .page-loader { position:fixed; inset:0; background:radial-gradient(circle at top right,var(--bg-light),var(--border),#fff); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; transition:opacity 0.4s; }
+    .page-loader.hidden { opacity:0; pointer-events:none; }
+    .loader-logo { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; letter-spacing:2px; margin-bottom:24px; }
+    .loader-spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);} }
+
+    .history-section { flex:1; padding:60px 5% 80px; max-width:1280px; margin:0 auto; width:100%; }
+
+    .page-header { margin-bottom:40px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; }
+    .page-header h1 { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; color:#111; }
+    .page-header p { font-size:15px; color:var(--text-light); margin-top:6px; }
+    .header-count { font-size:13px; color:var(--primary); font-weight:600; background:rgba(140,106,74,0.08); padding:6px 14px; border:1px solid rgba(140,106,74,0.2); }
+
+    .empty-state { text-align:center; padding:80px 20px; }
+    .empty-icon { width:80px; height:80px; background:linear-gradient(135deg,rgba(181,168,159,0.15),rgba(140,106,74,0.15)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; border:2px solid rgba(140,106,74,0.15); }
+    .empty-icon svg { stroke:var(--primary); }
+    .empty-state h2 { font-family:'Playfair Display',serif; font-size:24px; color:#111; margin-bottom:10px; }
+    .empty-state p { font-size:15px; color:var(--text-light); margin-bottom:28px; }
+    .go-generate-btn { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; background:linear-gradient(135deg,var(--primary-light),var(--primary)); color:white; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:0.8px; transition:all 0.3s; }
+    .go-generate-btn:hover { background:linear-gradient(135deg,#A59990,#7B5940); transform:translateY(-2px); box-shadow:0 8px 25px rgba(140,106,74,0.4); }
+
+    .history-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px; }
+
+    .history-card { background:white; border:1px solid var(--border); position:relative; transition:transform 0.3s,box-shadow 0.3s; }
+    .history-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(140,106,74,0.15); }
+
+    .card-thumb { position:relative; width:100%; aspect-ratio:1; overflow:hidden; background:var(--bg-light); }
+    .card-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .card-thumb .video-thumb { width:100%; height:100%; object-fit:cover; display:block; }
+    .output-badge { position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.65); color:white; font-size:10px; font-weight:600; padding:3px 8px; letter-spacing:0.5px; text-transform:uppercase; }
+    .card-overlay { position:absolute; inset:0; background:rgba(0,0,0,0); display:flex; align-items:center; justify-content:center; gap:8px; opacity:0; transition:all 0.3s; }
+    .history-card:hover .card-overlay { background:rgba(0,0,0,0.45); opacity:1; }
+    .overlay-btn { width:40px; height:40px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s; }
+    .overlay-btn:hover { transform:scale(1.1); }
+    .overlay-btn.view { background:white; }
+    .overlay-btn.view svg { stroke:#111; }
+    .overlay-btn.download { background:var(--primary); }
+    .overlay-btn.download svg { stroke:white; }
+    .overlay-btn.delete { background:#ef4444; }
+    .overlay-btn.delete svg { stroke:white; }
+
+    .card-info { padding:14px 16px; }
+    .card-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+    .meta-tag { background:var(--bg-light); color:var(--primary); border:1px solid var(--border); padding:3px 8px; font-size:11px; font-weight:600; text-transform:capitalize; letter-spacing:0.3px; }
+    .card-date { font-size:12px; color:var(--primary-light); }
+    .card-prompt { font-size:12px; color:var(--text-light); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; display:none; align-items:center; justify-content:center; padding:20px; }
+    .lightbox.show { display:flex; }
+    .lightbox-inner { position:relative; max-width:900px; width:100%; max-height:90vh; display:flex; flex-direction:column; }
+    .lightbox-img { width:100%; max-height:65vh; object-fit:contain; display:block; }
+    .lightbox-close { position:absolute; top:-44px; right:0; background:none; border:none; color:white; cursor:pointer; font-size:28px; line-height:1; }
+    .lightbox-info { background:rgba(255,255,255,0.05); padding:16px; margin-top:12px; }
+    .lightbox-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .lightbox-prompt { font-size:13px; color:var(--primary-light); }
+    .lightbox-actions { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; }
+    .lb-btn { padding:10px 24px; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; gap:8px; border:none; text-decoration:none; }
+    .lb-btn.primary { background:var(--primary); color:white; }
+    .lb-btn.primary:hover { background:#7B5940; }
+    .lb-btn.secondary { background:transparent; color:white; border:1px solid rgba(255,255,255,0.3); }
+    .lb-btn.secondary:hover { background:rgba(255,255,255,0.1); }
+    .lb-btn.danger { background:transparent; color:#ef4444; border:1px solid rgba(239,68,68,0.4); }
+    .lb-btn.danger:hover { background:rgba(239,68,68,0.1); }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; display:none; align-items:center; justify-content:center; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:white; padding:40px; max-width:400px; width:100%; margin:20px; position:relative; }
+    .modal-box::before { content:''; position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(90deg,#C9784A,#8B4513); }
+    .modal-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:600; margin-bottom:12px; }
+    .modal-text { font-size:14px; color:#555; line-height:1.6; margin-bottom:28px; }
+    .modal-actions { display:flex; gap:12px; }
+    .modal-confirm { flex:1; padding:12px; background:linear-gradient(135deg,#C9784A,#8B4513); border:none; color:white; font-weight:700; font-size:14px; font-family:'Inter',sans-serif; cursor:pointer; }
+    .modal-cancel { flex:1; padding:12px; background:white; border:1px solid #E5E0DC; color:#555; font-weight:600; font-size:14px; font-family:'Inter',sans-serif; cursor:pointer; }
+    .modal-cancel:hover { border-color:var(--primary); color:var(--primary); }
+
+    .toast { position:fixed; bottom:20px; right:20px; background:white; border:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 30px rgba(140,106,74,0.2); transform:translateX(400px); transition:transform 0.3s; z-index:9999; font-size:14px; }
+    .toast.show { transform:translateX(0); }
+    .toast.success { border-left:4px solid var(--success); }
+    .toast.error { border-left:4px solid #ef4444; }
+
+    footer { background:#111; color:white; padding:30px 20px; text-align:center; }
+    .footer-copyright { color:var(--text-light); font-size:14px; }
+
+    @media (max-width:768px) { .navbar { padding:14px 20px; } .navbar-links { gap:16px; } .history-section { padding:40px 20px 60px; } .history-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; } }
+    @media (max-width:480px) { .navbar-links a.hide-mobile { display:none; } .history-grid { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="page-loader" id="pageLoader">
+  <div class="loader-logo">BEAULIX</div>
+  <div class="loader-spinner"></div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Delete this visual?</h3>
+    <p class="modal-text">This will permanently remove it from your history. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="modal-confirm" id="confirmDeleteBtn">Yes, Delete</button>
+      <button class="modal-cancel" id="cancelDeleteBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightboxClose">✕</button>
+    <div id="lightboxMedia"></div>
+    <div class="lightbox-info">
+      <div class="lightbox-meta" id="lightboxMeta"></div>
+      <div class="lightbox-prompt" id="lightboxPrompt"></div>
+      <div class="lightbox-actions">
+        <button class="lb-btn primary" id="lbDownload">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button class="lb-btn danger" id="lbDelete">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="navbar">
+  <div class="logo-wrapper">
+    <div class="logo">BEAULIX</div>
+    <span class="logo-tagline">Decision Intelligence for Beauty Ads</span>
+  </div>
+  <div class="nav-menu">
+    <a href="index.html" class="nav-home-link">Home</a>
+    <a href="generator.html" class="nav-home-link">Generator</a>
+    <div class="user-profile" id="userProfile" role="button" aria-label="User menu" tabindex="0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="user-dropdown" id="userDropdown" role="menu">
+  <div class="user-info">
+    <a href="profile.html" class="user-name" id="userName">User</a>
+    <div class="user-email" id="userEmail"></div>
+  </div>
+  <button class="sign-out-btn" id="signOutBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1-2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+    Sign Out
+  </button>
+</div>
+
+<section class="history-section">
+  <div class="page-header">
+    <div>
+      <h1>Generated History</h1>
+      <p>All your AI-generated visuals, saved to your account</p>
+    </div>
+    <span class="header-count" id="itemCount">Loading...</span>
+  </div>
+  <div id="historyContainer"></div>
+</section>
+
+<footer><div class="footer-copyright">© 2026 Beaulix. All rights reserved.</div></footer>
+
+<script type="module">
+  import { app } from './firebase-config.js';
+  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { initNavAuth } from './nav-module.js';
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const pageLoader = document.getElementById('pageLoader');
+  const historyContainer = document.getElementById('historyContainer');
+  const itemCount = document.getElementById('itemCount');
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  const deleteModal = document.getElementById('deleteModal');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxClose = document.getElementById('lightboxClose');
+  const lightboxMedia = document.getElementById('lightboxMedia');
+  const lightboxMeta = document.getElementById('lightboxMeta');
+  const lightboxPrompt = document.getElementById('lightboxPrompt');
+  const lbDownload = document.getElementById('lbDownload');
+  const lbDelete = document.getElementById('lbDelete');
+
+  let historyItems = [];
+  let activeItem = null;
+  let pendingDeleteId = null;
+  let currentUserId = null;
+
+  function showToast(msg, type = 'success') {
+    toastMsg.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function formatDate(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderGrid(items) {
+    itemCount.textContent = `${items.length} visual${items.length !== 1 ? 's' : ''}`;
+
+    if (items.length === 0) {
+      historyContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <h2>No history yet</h2>
+          <p>Generate your first visual and it will appear here automatically.</p>
+          <a href="generator.html" class="go-generate-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Go to Generator
+          </a>
+        </div>`;
+      return;
+    }
+
+    historyContainer.innerHTML = `<div class="history-grid" id="historyGrid"></div>`;
+    const grid = document.getElementById('historyGrid');
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      card.dataset.id = item.id;
+
+      const isVideo = item.outputType === 'video';
+      // imageData is now a Cloudinary thumbnail URL or base64 fallback
+      const imgSrc = item.imageData && item.imageData !== 'video' && item.imageData !== ''
+        ? item.imageData : null;
+
+      const thumbHtml = imgSrc
+        ? `<img src="${imgSrc}" alt="Generated visual" loading="lazy" />`
+        : `<div class="thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>${isVideo ? 'Video' : 'No preview'}</span></div>`;
+
+      const tags = [item.category, item.funnel, item.aspectRatio].filter(Boolean);
+
+      card.innerHTML = `
+        <div class="card-thumb">
+          ${thumbHtml}
+          <span class="output-badge">${isVideo ? '▶ Video' : '🖼 Image'}</span>
+          <div class="card-overlay">
+            <button class="overlay-btn view" title="View" data-action="view" data-id="${item.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="overlay-btn download" title="Download" data-action="download" data-id="${item.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="overlay-btn delete" title="Delete" data-action="delete" data-id="${item.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="card-info">
+          <div class="card-meta">${tags.map(t => `<span class="meta-tag">${t}</span>`).join('')}</div>
+          <div class="card-date">${formatDate(item.timestamp)}</div>
+          ${item.prompt ? `<div class="card-prompt">${item.prompt}</div>` : ''}
+        </div>`;
+
+      grid.appendChild(card);
+    });
+  }
+
+  // Event delegation for card overlay buttons
+  historyContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    if (action === 'view') openLightbox(id);
+    else if (action === 'download') downloadItem(id);
+    else if (action === 'delete') promptDelete(id);
+  });
+
+  window.openLightbox = function(id) {
+    const item = historyItems.find(i => i.id === id);
+    if (!item) return;
+    activeItem = item;
+
+    const isVideo = item.outputType === 'video';
+    if (isVideo && item.cloudinaryUrl) {
+      lightboxMedia.innerHTML = `
+        <video controls autoplay muted playsinline
+          style="width:100%;max-height:65vh;object-fit:contain;display:block;background:#000;"
+          src="${item.cloudinaryUrl}">
+          Your browser doesn't support HTML5 video.
+        </video>`;
+    } else if (!isVideo && item.cloudinaryUrl) {
+      lightboxMedia.innerHTML = `<img src="${item.cloudinaryUrl}" class="lightbox-img" alt="Generated visual" />`;
+    } else if (item.imageData && item.imageData !== 'video' && item.imageData !== '') {
+      lightboxMedia.innerHTML = `<img src="${item.imageData}" class="lightbox-img" alt="Generated visual" />`;
+    } else {
+      lightboxMedia.innerHTML = `<div style="color:var(--primary-light);text-align:center;padding:40px;font-size:14px;">Preview not available for this ${item.outputType}</div>`;
+    }
+
+    const tags = [item.category, item.funnel, item.brandStyle, item.aspectRatio, item.productType].filter(Boolean);
+    lightboxMeta.innerHTML = tags.map(t => `<span class="meta-tag">${t}</span>`).join('');
+    lightboxPrompt.textContent = item.prompt || '';
+    lightbox.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    document.body.style.overflow = '';
+    lightboxMedia.innerHTML = '';
+    activeItem = null;
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  window.downloadItem = async function(id) {
+    const item = historyItems.find(i => i.id === id);
+    if (!item) return;
+
+    const isVideo = item.outputType === 'video';
+    const ext = isVideo ? 'mp4' : 'jpg';
+    const filename = `beaulix-${item.outputType}-${Date.now()}.${ext}`;
+
+    // Always prefer cloudinaryUrl — it's the full-quality file
+    const downloadUrl = item.cloudinaryUrl || null;
+
+    if (downloadUrl) {
+      try {
+        showToast('Preparing download...');
+        const resp = await fetch(downloadUrl);
+        if (!resp.ok) throw new Error('Fetch failed');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+        showToast('Download started!');
+      } catch (e) {
+        // Fallback to base64 thumbnail for images only
+        if (!isVideo && item.imageData && item.imageData !== 'video' && item.imageData !== '') {
+          fetch(item.imageData).then(r => r.blob()).then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+            showToast('Download started!');
+          }).catch(() => showToast('Download failed', 'error'));
+        } else {
+          showToast('Download failed', 'error');
+        }
+      }
+    } else {
+      showToast('No file available to download', 'error');
+    }
+  };
+
+  lbDownload.addEventListener('click', () => { if (activeItem) downloadItem(activeItem.id); });
+
+  window.promptDelete = function(id) {
+    pendingDeleteId = id;
+    deleteModal.classList.add('show');
+  };
+
+  lbDelete.addEventListener('click', () => {
+    if (!activeItem) return;
+    const id = activeItem.id;
+    closeLightbox();
+    promptDelete(id);
+  });
+
+  cancelDeleteBtn.addEventListener('click', () => {
+    deleteModal.classList.remove('show');
+    pendingDeleteId = null;
+  });
+
+  deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) {
+      deleteModal.classList.remove('show');
+      pendingDeleteId = null;
+    }
+  });
+
+  document.querySelector('.modal-box').addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // ── Cloudinary deletion via Cloud Function ────────────────────────
+  // The API secret must NEVER live in browser JS.  All deletions are
+  // routed through the authenticated deleteCloudinaryAsset Cloud Function.
+  async function deleteFromCloudinary(cloudinaryUrl) {
+    if (!cloudinaryUrl) return;
+    try {
+      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+      const functions = getFunctions(app);
+      const deleteAsset = httpsCallable(functions, 'deleteCloudinaryAsset');
+      const resourceType = cloudinaryUrl.includes('/video/') ? 'video' : 'image';
+      await deleteAsset({ cloudinaryUrl, resourceType });
+    } catch (e) {
+      console.error('Cloudinary delete failed:', e);
+    }
+  }
+
+  confirmDeleteBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!pendingDeleteId) return;
+    const userId = currentUserId || auth.currentUser?.uid;
+    if (!userId) { showToast('Not logged in. Please refresh.', 'error'); return; }
+    confirmDeleteBtn.textContent = 'Deleting...';
+    confirmDeleteBtn.disabled = true;
+    try {
+      const item = historyItems.find(i => i.id === pendingDeleteId);
+      await deleteDoc(doc(db, 'users', userId, 'history', pendingDeleteId));
+      if (item && item.cloudinaryUrl) {
+        await deleteFromCloudinary(item.cloudinaryUrl);
+      }
+      historyItems = historyItems.filter(i => i.id !== pendingDeleteId);
+      renderGrid(historyItems);
+      showToast('Deleted successfully');
+    } catch (e) {
+      console.error(e);
+      showToast('Delete failed. Please try again.', 'error');
+    }
+    deleteModal.classList.remove('show');
+    pendingDeleteId = null;
+    confirmDeleteBtn.textContent = 'Yes, Delete';
+    confirmDeleteBtn.disabled = false;
+  });
+
+  async function loadHistory(userId) {
+    try {
+      const q = query(collection(db, 'users', userId, 'history'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(q);
+      historyItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderGrid(historyItems);
+    } catch (e) {
+      console.error('Failed to load history:', e);
+      historyContainer.innerHTML = `<div class="empty-state"><p style="color:#ef4444;">Failed to load history. Please refresh.</p></div>`;
+      itemCount.textContent = '0 visuals';
+    }
+  }
+
+  initNavAuth({
+    injectDropdownLinks: true,
+    onUser: user => {
+      document.body.style.visibility = 'visible';
+      currentUserId = user.uid;
+      loadHistory(user.uid).then(() => {
+        setTimeout(() => pageLoader.classList.add('hidden'), 400);
+      });
+    },
+    onNoUser: () => {
+      window.location.href = 'login.html';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beaulix - My Profile</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="layout.css">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #ffffff, var(--bg-light)); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; }
+    h1, h2, h3, h4 { font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1.2; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);} }
+
+    /* Navbar layout is provided by layout.css */
+    .nav-home-link { text-decoration: none; color: #555555; font-weight: 500; position: relative; padding: 4px 0; transition: color 0.3s ease; text-transform: uppercase; font-size: 13px; letter-spacing: 1.5px; }
+    .nav-home-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px; background: #8C6A4A; transition: width 0.3s ease; }
+    .nav-home-link:hover { color: #8C6A4A; }
+    .nav-home-link:hover::after { width: 100%; }
+    .user-profile { cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; transition: var(--transition); overflow: hidden; border: 2px solid transparent; }
+    .user-profile:hover { border-color: var(--primary); }
+    .user-profile img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .user-dropdown { position: absolute; top: 70px; right: 5%; background: white; border: 1px solid var(--border); padding: 1.5rem; min-width: 250px; display: none; z-index: 1000; box-shadow: var(--shadow); }
+    .user-dropdown.show { display: block; animation: slideDown 0.3s ease; }
+    .user-info { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .user-name { font-weight: 600; margin-bottom: 0.2rem; display: block; color: var(--text-dark); text-decoration: none; cursor: pointer; transition: var(--transition); }
+    .user-name:hover { color: var(--primary); }
+    .user-email { color: var(--text-light); font-size: 0.8rem; }
+    .profile-link-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; background: none; border: none; border-bottom: 1px solid #F1ECE8; color: #111; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; text-decoration: none; cursor: pointer; transition: all 0.3s; }
+    .profile-link-btn:hover { background: #FAF7F4; color: #8C6A4A; }
+    .profile-link-btn svg { stroke: #8C6A4A; }
+    .sign-out-btn { width: 100%; padding: 0.8rem; background: var(--bg-light); border: 1px solid var(--border); color: var(--text-medium); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', sans-serif; margin-top: 8px; }
+    .sign-out-btn:hover { background: var(--error); color: white; border-color: var(--error); }
+
+    .profile-section { flex: 1; padding: 2rem 5%; background: radial-gradient(circle at top right, #FAF7F4, #F1ECE8, #ffffff); position: relative; overflow: hidden; }
+    .decorative-sparkle { position: absolute; font-size: 60px; color: rgba(140, 106, 74, 0.1); pointer-events: none; animation: float 6s ease-in-out infinite; }
+    .sparkle-1 { top: 10%; left: 5%; animation-delay: 0s; }
+    .sparkle-2 { bottom: 15%; right: 8%; animation-delay: 3s; }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
+    .profile-wrapper { max-width: 800px; margin: 0 auto; position: relative; }
+
+    .page-header { margin-bottom: 40px; }
+    .page-header h1 { font-size: 32px; color: #111111; margin-bottom: 8px; }
+    .page-header p { font-size: 15px; color: #8A8A8A; }
+
+    .profile-card { background: white; padding: 50px; box-shadow: 0 20px 60px rgba(140, 106, 74, 0.12); border: 1px solid #F1ECE8; position: relative; margin-bottom: 24px; }
+    .profile-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #B5A89F, #8C6A4A); }
+    .profile-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #F1ECE8; }
+    .profile-card-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: #111111; letter-spacing: 0.3px; }
+    .edit-toggle-btn { padding: 8px 20px; background: white; border: 1px solid #8C6A4A; color: #8C6A4A; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+    .edit-toggle-btn:hover { background: #FAF7F4; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(140, 106, 74, 0.15); }
+    .edit-toggle-btn.cancel { border-color: #C9784A; color: #C9784A; }
+    .edit-toggle-btn.cancel:hover { background: rgba(201, 120, 74, 0.05); }
+
+    .avatar-section { display: flex; align-items: center; gap: 28px; margin-bottom: 36px; }
+    .avatar-container { position: relative; flex-shrink: 0; }
+    .profile-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #8C6A4A; object-fit: cover; display: block; }
+    .avatar-placeholder { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #8C6A4A; background: linear-gradient(135deg, #B5A89F, #8C6A4A); display: flex; align-items: center; justify-content: center; color: white; font-size: 36px; font-weight: 700; font-family: 'Playfair Display', serif; }
+    .avatar-upload-btn { position: absolute; bottom: 2px; right: 2px; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #B5A89F, #8C6A4A); border: 2px solid white; display: none; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+    .avatar-upload-btn:hover { background: linear-gradient(135deg, #A59990, #7B5940); transform: scale(1.1); }
+    .avatar-upload-btn svg { stroke: white; }
+    .avatar-upload-btn.show { display: flex; }
+    .avatar-file-input { display: none; }
+    .avatar-info h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; color: #111111; margin-bottom: 4px; }
+    .member-since { font-size: 13px; color: #8A8A8A; display: flex; align-items: center; gap: 6px; }
+    .member-since svg { stroke: #B5A89F; }
+
+    .info-grid { display: flex; flex-direction: column; gap: 0; }
+    .info-row { display: flex; align-items: center; padding: 20px 0; border-bottom: 1px solid #F1ECE8; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { width: 160px; font-size: 14px; font-weight: 600; color: #555555; letter-spacing: 0.3px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; }
+    .info-label svg { stroke: #8C6A4A; flex-shrink: 0; }
+    .info-value { flex: 1; font-size: 15px; color: #111111; }
+    .info-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px; border-radius: 0; }
+    .info-badge.verified { background: rgba(140, 106, 74, 0.1); color: #8C6A4A; border: 1px solid rgba(140, 106, 74, 0.2); }
+    .info-badge.google { background: rgba(66, 133, 244, 0.08); color: #4285F4; border: 1px solid rgba(66, 133, 244, 0.15); }
+
+    .edit-input-wrapper { display: none; flex: 1; }
+    .edit-input-wrapper.show { display: block; }
+    .edit-input { width: 100%; padding: 12px 16px; border: 1px solid #F1ECE8; background: #FAF7F4; font-size: 15px; font-family: 'Inter', sans-serif; color: #111111; transition: all 0.3s ease; }
+    .edit-input:focus { outline: none; border-color: #8C6A4A; background: white; box-shadow: 0 0 0 3px rgba(140, 106, 74, 0.1); }
+    .edit-input.error { border-color: #C9784A; background: rgba(201, 120, 74, 0.03); }
+    .edit-error { font-size: 12px; color: #C9784A; margin-top: 4px; display: none; }
+    .edit-error.show { display: block; }
+    .info-value.hidden { display: none; }
+
+    .edit-actions { display: none; gap: 12px; margin-top: 28px; padding-top: 24px; border-top: 1px solid #F1ECE8; }
+    .edit-actions.show { display: flex; }
+    .save-btn { padding: 14px 36px; background: linear-gradient(135deg, #B5A89F, #8C6A4A); border: none; color: white; font-size: 14px; font-weight: 700; letter-spacing: 0.8px; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; font-family: 'Inter', sans-serif; }
+    .save-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), rgba(201, 164, 107, 0.4), rgba(255, 255, 255, 0.3), transparent); transition: left 0.7s ease; }
+    .save-btn:hover::before { left: 100%; }
+    .save-btn:hover { background: linear-gradient(135deg, #A59990, #7B5940); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(140, 106, 74, 0.4); }
+    .save-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .cancel-btn { padding: 14px 36px; background: white; border: 1px solid #E5E0DC; color: #555555; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s ease; font-family: 'Inter', sans-serif; }
+    .cancel-btn:hover { border-color: #8C6A4A; color: #8C6A4A; background: #FAF7F4; }
+    .btn-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+
+    .danger-card { background: white; padding: 40px 50px; box-shadow: 0 20px 60px rgba(140, 106, 74, 0.08); border: 1px solid #F1ECE8; position: relative; margin-bottom: 24px; }
+    .danger-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #C9784A, #8B4513); }
+    .danger-card-header h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; color: #111111; margin-bottom: 6px; }
+    .danger-card-header p { font-size: 14px; color: #8A8A8A; line-height: 1.5; }
+    .danger-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+    .logout-btn { padding: 14px 32px; background: white; border: 1px solid #8C6A4A; color: #8C6A4A; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 10px; }
+    .logout-btn:hover { background: #FAF7F4; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(140, 106, 74, 0.15); }
+    .change-password-btn { padding: 14px 32px; background: white; border: 1px solid #E5E0DC; color: #555555; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .change-password-btn:hover { border-color: #8C6A4A; color: #8C6A4A; background: #FAF7F4; }
+    .change-password-btn:hover svg { stroke: #8C6A4A; }
+
+    .success-toast { position: fixed; top: 80px; right: 20px; background: linear-gradient(135deg, #B5A89F, #8C6A4A); color: white; padding: 18px 28px; border-radius: 0px; box-shadow: 0 8px 30px rgba(140, 106, 74, 0.35); display: none; align-items: center; gap: 14px; z-index: 1100; animation: slideIn 0.4s ease; border-left: 4px solid #7B5940; font-size: 14px; font-weight: 500; letter-spacing: 0.3px; max-width: 420px; }
+    .success-toast.show { display: flex; }
+    .success-toast.error-toast { background: linear-gradient(135deg, #8B4513, #5C2E0E); border-left: 4px solid #3D1F09; }
+    @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; animation: fadeIn 0.2s ease; }
+    .modal-overlay.show { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box { background: white; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); border: 1px solid #F1ECE8; position: relative; animation: modalSlide 0.3s ease; }
+    .modal-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #C9784A, #8B4513); }
+    @keyframes modalSlide { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: #111111; text-align: center; margin-bottom: 8px; }
+    .modal-text { font-size: 14px; color: #555555; text-align: center; line-height: 1.6; margin-bottom: 28px; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-confirm-btn { flex: 1; padding: 14px; background: linear-gradient(135deg, #C9784A, #8B4513); border: none; color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .modal-confirm-btn:hover { background: linear-gradient(135deg, #B5683E, #7A3C10); transform: translateY(-1px); }
+    .modal-cancel-btn { flex: 1; padding: 14px; background: white; border: 1px solid #E5E0DC; color: #555555; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .modal-cancel-btn:hover { border-color: #8C6A4A; color: #8C6A4A; background: #FAF7F4; }
+
+    footer { background: #111111; color: white; padding: 2rem; text-align: center; flex-shrink: 0; margin-top: auto; }
+    .footer-copyright { color: #8A8A8A; font-size: 14px; }
+
+    @media (max-width: 768px) { .profile-card, .danger-card { padding: 30px; } .avatar-section { flex-direction: column; text-align: center; } .info-row { flex-direction: column; align-items: flex-start; gap: 6px; } .info-label { width: 100%; } .danger-actions { flex-direction: column; } .modal-actions { flex-direction: column; } .decorative-sparkle { font-size: 40px; } }
+    @media (max-width: 480px) { .profile-card, .danger-card { padding: 20px; } .profile-avatar, .avatar-placeholder { width: 80px; height: 80px; font-size: 28px; } .decorative-sparkle { display: none; } }
+  </style>
+</head>
+<body>
+
+<div class="success-toast" id="successToast">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="toastIcon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMessage"></span>
+</div>
+
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-box">
+    <div class="modal-icon" style="display: flex; justify-content: center; margin-bottom: 20px;"><div class="modal-icon-circle" style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, rgba(201,120,74,0.1), rgba(139,69,19,0.1)); display: flex; align-items: center; justify-content: center; border: 2px solid rgba(201,120,74,0.2);"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div></div>
+    <h2 class="modal-title" style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: #111111; text-align: center; margin-bottom: 8px;">Sign Out?</h2>
+    <p class="modal-text" style="font-size: 14px; color: #555555; text-align: center; line-height: 1.6; margin-bottom: 28px;">Are you sure you want to sign out of your Beaulix account?</p>
+    <div class="modal-actions" style="display: flex; gap: 12px;">
+      <button class="modal-confirm-btn" id="confirmLogoutBtn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #C9784A, #8B4513); border: none; color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;">Yes, Sign Out</button>
+      <button class="modal-cancel-btn" id="cancelLogoutBtn" style="flex: 1; padding: 14px; background: white; border: 1px solid #E5E0DC; color: #555555; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<nav class="navbar" id="navbar">
+  <div class="logo-wrapper">
+    <div class="logo">BEAULIX</div>
+    <span class="logo-tagline">Decision Intelligence for Beauty Ads</span>
+  </div>
+  <div class="nav-menu">
+    <a href="index.html" class="nav-home-link">Home</a>
+    <a href="generator.html" class="nav-home-link">Generator</a>
+    <div class="user-profile" id="userProfile" role="button" aria-label="User menu" tabindex="0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+  </div>
+</nav>
+
+<div class="user-dropdown" id="userDropdown" role="menu">
+  <div class="user-info">
+    <a href="profile.html" class="user-name" id="userName">User</a>
+    <div class="user-email" id="userEmail"></div>
+  </div>
+  <a href="profile.html" class="profile-link-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    My Profile
+  </a>
+  <a href="history.html" class="profile-link-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    History
+  </a>
+  <button class="sign-out-btn" id="signOutBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+    Sign Out
+  </button>
+</div>
+
+<section class="profile-section">
+  <div class="decorative-sparkle sparkle-1">✦</div>
+  <div class="decorative-sparkle sparkle-2">✦</div>
+  <div class="profile-wrapper">
+    <div class="page-header"><h1>My Profile</h1><p>Manage your account information and preferences</p></div>
+    <div class="profile-card">
+      <div class="profile-card-header">
+        <span class="profile-card-title">Personal Information</span>
+        <button class="edit-toggle-btn" id="editToggleBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Profile</button>
+      </div>
+      <div class="avatar-section">
+        <div class="avatar-container"><div id="avatarDisplay"></div><label class="avatar-upload-btn" id="avatarUploadBtn" title="Change photo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg><input type="file" class="avatar-file-input" id="avatarFileInput" accept="image/*" /></label></div>
+        <div class="avatar-info"><h2 id="displayNameLarge">Loading...</h2><span class="member-since"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Member since <span id="memberSince">—</span></span></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-row"><div class="info-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Full Name</div><span class="info-value" id="nameValue">Loading...</span><div class="edit-input-wrapper" id="nameEditWrapper"><input type="text" class="edit-input" id="nameEditInput" placeholder="Enter your full name" /><div class="edit-error" id="nameEditError"></div></div></div>
+        <div class="info-row"><div class="info-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>Email</div><span class="info-value" id="emailValue">Loading...</span></div>
+        <div class="info-row"><div class="info-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Sign-in</div><span class="info-value" id="providerValue">Loading...</span></div>
+        <div class="info-row"><div class="info-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>User ID</div><span class="info-value" id="uidValue" style="font-size: 13px; color: #8A8A8A; font-family: monospace;">Loading...</span></div>
+      </div>
+      <div class="edit-actions" id="editActions"><button class="save-btn" id="saveBtn">Save Changes</button><button class="cancel-btn" id="cancelEditBtn">Cancel</button></div>
+    </div>
+    <div class="danger-card"><div class="danger-card-header"><h3>Account Actions</h3><p>Manage your password and session</p></div><div class="danger-actions"><a href="password-reset.html?mode=change" class="change-password-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path><circle cx="12" cy="16" r="1"></circle></svg>Change Password</a><button class="logout-btn" id="logoutBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>Sign Out</button></div></div>
+  </div>
+</section>
+
+<footer><div class="footer-copyright">© 2026 Beaulix. All rights reserved.</div></footer>
+
+<script type="module">
+  import { app } from './firebase-config.js';
+  import { getAuth, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+  import { initNavAuth, getLocalAvatar, getInitials, renderNavAvatar } from './nav-module.js';
+  import { CLOUDINARY_CLOUD, CLOUDINARY_PRESET } from './cloudinary-config.js';
+
+  const auth = getAuth(app);
+
+  const successToast = document.getElementById('successToast');
+  const toastMessage = document.getElementById('toastMessage');
+  const toastIcon = document.getElementById('toastIcon');
+  const avatarDisplay = document.getElementById('avatarDisplay');
+  const avatarUploadBtn = document.getElementById('avatarUploadBtn');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  const displayNameLarge = document.getElementById('displayNameLarge');
+  const memberSince = document.getElementById('memberSince');
+  const nameValue = document.getElementById('nameValue');
+  const emailValue = document.getElementById('emailValue');
+  const providerValue = document.getElementById('providerValue');
+  const uidValue = document.getElementById('uidValue');
+  const editToggleBtn = document.getElementById('editToggleBtn');
+  const nameEditWrapper = document.getElementById('nameEditWrapper');
+  const nameEditInput = document.getElementById('nameEditInput');
+  const nameEditError = document.getElementById('nameEditError');
+  const editActions = document.getElementById('editActions');
+  const saveBtn = document.getElementById('saveBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const logoutModal = document.getElementById('logoutModal');
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+  let isEditMode = false;
+  let currentUser = null;
+
+  function showToast(message, type = 'success', duration = 4000) {
+    toastMessage.textContent = message;
+    if (type === 'error') { successToast.classList.add('error-toast'); toastIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>'; }
+    else { successToast.classList.remove('error-toast'); toastIcon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>'; }
+    successToast.classList.add('show');
+    setTimeout(() => successToast.classList.remove('show'), duration);
+  }
+
+  // getInitials imported from nav-module.js
+  function formatDate(timestamp) { if (!timestamp) return '—'; return new Date(timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  function getProviderName(user) { return user.providerData.some(p => p.providerId === 'google.com') ? 'Google' : 'Email & Password'; }
+  function isGoogleUser(user) { return user.providerData.some(p => p.providerId === 'google.com'); }
+  function getAvatarUrl(user) { return getLocalAvatar(user.uid, user.photoURL); }
+
+  function renderProfile(user) {
+    const name = user.displayName || 'Beaulix User';
+    const email = user.email || 'Not available';
+    const photoURL = getAvatarUrl(user);
+    if (photoURL) { avatarDisplay.innerHTML = `<img src="${photoURL}" alt="Profile" class="profile-avatar" referrerpolicy="no-referrer" />`; }
+    else { avatarDisplay.innerHTML = `<div class="avatar-placeholder">${getInitials(name)}</div>`; }
+    displayNameLarge.textContent = name;
+    memberSince.textContent = formatDate(user.metadata?.creationTime);
+    nameValue.textContent = name;
+    emailValue.innerHTML = `${email} <span class="info-badge verified"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>Verified</span>`;
+    providerValue.innerHTML = isGoogleUser(user) ? `<span class="info-badge google"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>Google</span>` : `<span class="info-badge verified"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>Email & Password</span>`;
+    uidValue.textContent = user.uid;
+    nameEditInput.value = user.displayName || '';
+  }
+
+  function updateNavAvatar(user) {
+    renderNavAvatar(document.getElementById('userProfile'), user);
+  }
+
+  function enterEditMode() {
+    isEditMode = true;
+    nameValue.classList.add('hidden');
+    nameEditWrapper.classList.add('show');
+    editActions.classList.add('show');
+    avatarUploadBtn.classList.add('show');
+    nameEditInput.value = currentUser.displayName || '';
+    nameEditInput.focus();
+    editToggleBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Cancel`;
+    editToggleBtn.classList.add('cancel');
+  }
+
+  function exitEditMode() {
+    isEditMode = false;
+    nameValue.classList.remove('hidden');
+    nameEditWrapper.classList.remove('show');
+    editActions.classList.remove('show');
+    avatarUploadBtn.classList.remove('show');
+    nameEditError.classList.remove('show');
+    nameEditInput.classList.remove('error');
+    editToggleBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Edit Profile`;
+    editToggleBtn.classList.remove('cancel');
+  }
+
+  async function saveProfile() {
+    const newName = nameEditInput.value.trim();
+    if (!newName) { nameEditInput.classList.add('error'); nameEditError.textContent = 'Name cannot be empty'; nameEditError.classList.add('show'); nameEditInput.focus(); return; }
+    if (newName.length < 2) { nameEditInput.classList.add('error'); nameEditError.textContent = 'Name must be at least 2 characters'; nameEditError.classList.add('show'); nameEditInput.focus(); return; }
+    if (!/^[a-zA-Z\s'-]+$/.test(newName)) { nameEditInput.classList.add('error'); nameEditError.textContent = 'Name can only contain letters, spaces, hyphens'; nameEditError.classList.add('show'); nameEditInput.focus(); return; }
+    if (newName === currentUser.displayName) { exitEditMode(); return; }
+    saveBtn.disabled = true; saveBtn.innerHTML = '<span class="btn-spinner"></span> Saving...';
+    try { await updateProfile(currentUser, { displayName: newName }); showToast('Profile updated successfully!'); renderProfile(currentUser); updateNavAvatar(currentUser); exitEditMode(); } 
+    catch (error) { showToast('Failed to update profile. Please try again.', 'error'); }
+    saveBtn.disabled = false; saveBtn.innerHTML = 'Save Changes';
+  }
+
+  function openLogoutModal() { logoutModal.classList.add('show'); document.body.style.overflow = 'hidden'; }
+  function closeLogoutModal() { logoutModal.classList.remove('show'); document.body.style.overflow = ''; }
+  async function handleLogout() { confirmLogoutBtn.disabled = true; confirmLogoutBtn.textContent = 'Signing out...'; try { await signOut(auth); window.location.href = 'index.html'; } catch (error) { showToast('Failed to sign out. Please try again.', 'error'); confirmLogoutBtn.disabled = false; confirmLogoutBtn.textContent = 'Yes, Sign Out'; closeLogoutModal(); } }
+
+  editToggleBtn.addEventListener('click', () => { if (isEditMode) exitEditMode(); else enterEditMode(); });
+  saveBtn.addEventListener('click', saveProfile);
+  cancelEditBtn.addEventListener('click', exitEditMode);
+  nameEditInput.addEventListener('focus', () => { nameEditInput.classList.remove('error'); nameEditError.classList.remove('show'); });
+  nameEditInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveProfile(); } });
+  logoutBtn.addEventListener('click', openLogoutModal);
+  confirmLogoutBtn.addEventListener('click', handleLogout);
+  cancelLogoutBtn.addEventListener('click', closeLogoutModal);
+  logoutModal.addEventListener('click', (e) => { if (e.target === logoutModal) closeLogoutModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && logoutModal.classList.contains('show')) closeLogoutModal(); });
+
+  avatarFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file.', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image must be less than 5MB.', 'error'); return; }
+
+    showToast('Uploading avatar…', 'info');
+    try {
+      // Capture old Cloudinary URL before overwriting, so we can clean it up after upload.
+      const oldAvatarUrl = localStorage.getItem(`beaulix_avatar_${currentUser.uid}`) || '';
+
+      // Upload to Cloudinary — stores a URL (~100 chars) instead of raw base64
+      // (~2.7 MB), avoiding the localStorage 5 MB exhaustion documented in nav-module.js.
+      const formData = new FormData();
+      formData.append('file', file, 'beaulix_avatar.jpg');
+      formData.append('upload_preset', CLOUDINARY_PRESET);
+      formData.append('folder', 'beaulix/avatars');
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      const data = await res.json();
+      const avatarUrl = data.secure_url;
+
+      // Persist the URL (not base64) so localStorage stays well under its 5 MB cap.
+      localStorage.setItem(`beaulix_avatar_${currentUser.uid}`, avatarUrl);
+      avatarDisplay.innerHTML = `<img src="${avatarUrl}" alt="Profile" class="profile-avatar" />`;
+      updateNavAvatar(currentUser);
+      showToast('Profile photo saved!', 'success');
+
+      // Delete the previous avatar from Cloudinary storage to avoid accumulation.
+      if (oldAvatarUrl && oldAvatarUrl.includes('cloudinary.com')) {
+        try {
+          const functions = getFunctions(app);
+          const deleteAsset = httpsCallable(functions, 'deleteCloudinaryAsset');
+          await deleteAsset({ cloudinaryUrl: oldAvatarUrl, resourceType: 'image' });
+        } catch (deleteErr) {
+          // Non-fatal: log but don't surface to the user.
+          console.warn('Failed to delete old avatar from Cloudinary:', deleteErr.message);
+        }
+      }
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      showToast('Upload failed — please try again.', 'error');
+    }
+    avatarFileInput.value = '';
+  });
+
+  initNavAuth({ injectDropdownLinks: false });
+
+  onAuthStateChanged(auth, (user) => { 
+    if (user) { 
+      currentUser = user; 
+      renderProfile(user); 
+      updateNavAvatar(user);
+      // Show toast from password-change flow (set by reset-action.html)
+      const _toastRaw = sessionStorage.getItem('beaulix_toast');
+      if (_toastRaw) {
+        try {
+          const { message, type } = JSON.parse(_toastRaw);
+          sessionStorage.removeItem('beaulix_toast');
+          setTimeout(() => showToast(message, type), 400);
+        } catch {}
+      }
+    } else { 
+      window.location.href = 'login.html'; 
+    } 
+  });
+</script>
+</body>
+</html>

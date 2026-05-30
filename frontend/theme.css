@@ -1,0 +1,11 @@
+/* Beaulix shared design tokens — imported by every page */
+:root {
+  --primary: #8C6A4A; --primary-dark: #6B4F37; --primary-light: #B5A89F;
+  --bg-light: #FAF7F4; --bg-white: #FFFFFF; --border: #F1ECE8;
+  --text-dark: #111111; --text-medium: #555555; --text-light: #8A8A8A;
+  --success: #4CAF50; --error: #F44336; --warning: #FFC107;
+  --shadow: 0 10px 30px rgba(140,106,74,0.1);
+  --shadow-hover: 0 20px 40px rgba(140,106,74,0.2);
+  --transition: all 0.3s ease;
+}
+::selection { background: rgba(140,106,74,0.2); color: var(--text-dark); }
