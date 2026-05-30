@@ -476,7 +476,7 @@
 
     function updateStep2RecsFromAPI(recs) {
       if (!recs || (!recs.recommended_brand_style && !recs.recommended_aspect_ratio && !recs.recommended_output_type)) {
-        visualStrategySection.style.display = 'none';
+        visualStrategySection.classList.add('hidden'); visualStrategySection.style.display = 'none';
         return;
       }
 
@@ -507,7 +507,7 @@
         visualStrategyItems.appendChild(item);
       });
 
-      visualStrategySection.style.display = 'block';
+      visualStrategySection.classList.remove('hidden'); visualStrategySection.style.display = 'block';
     }
 
     async function checkGPUConnection() {
