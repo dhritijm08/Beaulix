@@ -14,11 +14,8 @@
     const VIDEO_LOAD_TIMEOUT = 180000;
     const DEBUG = false; // set true locally to enable verbose console output
 
-    // Firebase Functions httpsCallable refs — populated after Firebase loads.
-    // ML calls (mlPredict / mlPredictStep2) go through these; the backend URL
-    // and API key are kept exclusively in Firebase Secrets.
-    let _mlPredict     = null;  // httpsCallable for /predict
-    let _mlPredictStep2 = null; // httpsCallable for /predict-step2
+    // ML backend base URL — read from Firestore config/backend on load.
+    let _mlBackendUrl  = null;
 
     // Single config namespace — avoids polluting window with individual globals.
     window.BEAULIX_CONFIG = {
@@ -39,7 +36,7 @@
       try {
         const { app } = await import('./firebase-config.js');
         const { getAuth }    = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
-        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
+        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
 
         // Wait for auth state once.
         const user = await new Promise(resolve => {
@@ -47,27 +44,33 @@
         });
         if (!user) throw new Error('Not signed in');
 
-        // Wire up ML Cloud Function callables — these carry the user's Firebase ID
-        // token automatically.  The backend URL and API key stay in Secrets.
-        const functions = getFunctions(app);
-        _mlPredict      = httpsCallable(functions, 'mlPredict',      { timeout: FETCH_TIMEOUT });
-        _mlPredictStep2 = httpsCallable(functions, 'mlPredictStep2', { timeout: FETCH_TIMEOUT });
-
-        // GPU URL — fetched via getGpuUrl Cloud Function so it is never hardcoded.
+        // GPU URL — read directly from Firestore config/gpu doc (no Cloud Function needed).
+        // Colab writes the ngrok URL here on startup; frontend reads it directly.
+        // Firestore rules allow authenticated reads of config/gpu and config/backend.
         try {
-          const getGpuUrl = httpsCallable(functions, 'getGpuUrl', { timeout: 10000 });
-          const gpuResult = await getGpuUrl();
-          if (gpuResult.data?.url) {
-            GPU_API_BASE = gpuResult.data.url;
+          const db = getFirestore(app);
+          const [gpuDoc, backendDoc] = await Promise.all([
+            getDoc(doc(db, 'config', 'gpu')),
+            getDoc(doc(db, 'config', 'backend')),
+          ]);
+
+          const gpuUrl = gpuDoc.exists() ? gpuDoc.data()?.url : null;
+          if (gpuUrl) {
+            GPU_API_BASE = gpuUrl;
             window.BEAULIX_CONFIG.GPU_API_BASE = GPU_API_BASE;
             checkGPUConnection();
           } else {
-            if (DEBUG) console.warn('getGpuUrl returned no URL — run Colab first.');
+            if (DEBUG) console.warn('config/gpu doc missing or empty — run Colab first.');
             document.getElementById('gpuDotStatus').className = 'status-dot offline';
             document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
           }
+
+          _mlBackendUrl = backendDoc.exists() ? backendDoc.data()?.url : null;
+          if (!_mlBackendUrl) {
+            if (DEBUG) console.warn('config/backend doc missing — ML engine unavailable.');
+          }
         } catch (gpuErr) {
-          if (DEBUG) console.warn('getGpuUrl failed:', gpuErr.message);
+          if (DEBUG) console.warn('Firestore config read failed:', gpuErr.message);
           document.getElementById('gpuDotStatus').className = 'status-dot offline';
           document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
         }
@@ -278,18 +281,12 @@
 
     async function checkMLEngine() {
       try {
-        // Health check via the Firebase Functions domain — the same path the
-        // browser uses for all ML calls.  A successful response means the proxy
-        // (and therefore the backend) is reachable.
-        if (!_mlPredict) { _applyMLDegradedState(false); return; }
-        // Use a lightweight OPTIONS/ping via httpsCallable with an empty body
-        // rather than a raw fetch to the backend — keeps the backend URL hidden.
-        // The Function returns 200 with {status:'healthy'} when the backend is up.
-        await Promise.race([
-          _mlPredict({ _healthCheck: true }),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000)),
-        ]);
-        _applyMLDegradedState(true);
+        if (!_mlBackendUrl) { _applyMLDegradedState(false); return; }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(`${_mlBackendUrl}/health`, { signal: controller.signal });
+        clearTimeout(timer);
+        _applyMLDegradedState(res.ok);
       } catch {
         _applyMLDegradedState(false);
       }
@@ -763,10 +760,17 @@
       try {
         await runStagedLoading();
         const payload = buildPayload();
-        // Call via Firebase Cloud Function — backend URL and API key stay in Secrets.
-        if (!_mlPredict) throw new Error('ML engine not initialised — please refresh the page.');
-        const result  = await _mlPredict(payload);
-        const responseData = result.data;
+        if (!_mlBackendUrl) throw new Error('ML engine not configured — add config/backend doc in Firestore.');
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+        const { app } = await import('./firebase-config.js');
+        const token = await getAuth(app).currentUser?.getIdToken();
+        const mlRes = await fetchWithTimeout(`${_mlBackendUrl}/predict`, {
+          method: 'POST', timeout: FETCH_TIMEOUT,
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+          body: JSON.stringify(payload),
+        });
+        if (!mlRes.ok) { const err = await mlRes.json().catch(() => ({})); throw new Error(err.detail || `ML error ${mlRes.status}`); }
+        const responseData = await mlRes.json();
         if (!responseData) throw new Error('Empty response from ML engine.');
         analysisResults.classList.remove('hidden'); analysisResults.style.display = 'block';
         applyAnalysisPredictions(responseData);
@@ -802,10 +806,16 @@
       step2PredictionData = null; // reset
       try {
         const step2Payload = buildStep2Payload();
-        // Route through Firebase Functions — keeps backend URL and API key hidden.
-        if (_mlPredictStep2) {
-          const s2Result = await _mlPredictStep2(step2Payload);
-          if (s2Result.data) step2PredictionData = s2Result.data;
+        if (_mlBackendUrl) {
+          const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+          const { app } = await import('./firebase-config.js');
+          const token = await getAuth(app).currentUser?.getIdToken();
+          const s2Res = await fetchWithTimeout(`${_mlBackendUrl}/predict-step2`, {
+            method: 'POST', timeout: FETCH_TIMEOUT,
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: JSON.stringify(step2Payload),
+          });
+          if (s2Res.ok) step2PredictionData = await s2Res.json();
         }
       } catch (e) {
         if (DEBUG) console.warn('predict-step2 failed, falling back to step1 data:', e);

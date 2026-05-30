@@ -57,7 +57,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "script-src 'self' https://www.gstatic.com https://apis.google.com https://fonts.googleapis.com; connect-src 'self' https://*.cloudfunctions.net https://*.run.app https://www.gstatic.com https://apis.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://api.cloudinary.com https://res.cloudinary.com; object-src 'none'; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://res.cloudinary.com blob: https://*.googleusercontent.com; media-src 'self' blob: https://res.cloudinary.com; worker-src 'none'; frame-ancestors 'none';"
+            "value": "script-src 'self' https://www.gstatic.com https://apis.google.com https://fonts.googleapis.com; connect-src 'self' https://firestore.googleapis.com https://www.gstatic.com https://apis.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.cloudinary.com https://res.cloudinary.com https://*.ngrok-free.app https://*.ngrok-free.dev https://*.ngrok.io https://*.onrender.com https://*.railway.app; object-src 'none'; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://res.cloudinary.com blob: https://*.googleusercontent.com; media-src 'self' blob: https://res.cloudinary.com; worker-src 'none'; frame-ancestors 'none';"
           }
         ]
       }
@@ -67,18 +67,5 @@
   },
   "firestore": {
     "rules": "firestore.rules"
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
-    }
-  ]
+  }
 }

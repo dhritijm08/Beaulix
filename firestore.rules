@@ -9,7 +9,7 @@ service cloud.firestore {
     // exclusively as a Firebase Secret (BEAULIX_API_KEY) and is only accessible
     // to Cloud Functions — it never reaches the browser.
     match /config/{docId} {
-      allow read: if request.auth != null && docId == "gpu";
+      allow read: if request.auth != null && (docId == "gpu" || docId == "backend");
       allow write: if false;
     }
 
