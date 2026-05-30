@@ -1,6 +1,22 @@
     const ML_API_BASE  = window.BEAULIX_ML_API || "http://localhost:8000";
     window._ML_API_BASE = ML_API_BASE;
-    const GPU_API_BASE = "https://emelina-unflattered-catharine.ngrok-free.dev"; // ⚠️ Update this each time you restart Colab
+    // GPU_API_BASE is fetched dynamically from the getGpuUrl Firebase Function
+    // so the URL never lives in source control and updates automatically when
+    // the Colab session restarts. See functions/index.js › exports.getGpuUrl.
+    let GPU_API_BASE = null;
+    (async () => {
+      try {
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+        const { app } = await import('./firebase-config.js');
+        const fns = getFunctions(app);
+        const getGpuUrl = httpsCallable(fns, 'getGpuUrl');
+        const result = await getGpuUrl();
+        GPU_API_BASE = result.data.url;
+        window._GPU_API_BASE = GPU_API_BASE;
+      } catch (e) {
+        console.error('Failed to fetch GPU URL from getGpuUrl Function:', e);
+      }
+    })();
     const FETCH_TIMEOUT = 300000;
     const VIDEO_LOAD_TIMEOUT = 180000;
     // BEAULIX_API_KEY is injected by the Firebase Function proxy (recommended)

@@ -63,7 +63,7 @@ export function initStep2Module({
           if (debug) console.debug('step2 fetch aborted (superseded by newer selection)');
           return;
         }
-        console.warn('Live step2 score update failed:', e);
+        if (window.DEBUG || false) console.warn('Live step2 score update failed:', e);
       } finally {
         activeController = null;
       }

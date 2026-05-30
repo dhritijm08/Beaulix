@@ -55,9 +55,7 @@ logger = logging.getLogger(__name__)
 from constants import (
     EXCEL_COL_MAP,
     FEATURE_COLS,
-    LEAKAGE_COLS,
     VALUE_NORMALISATIONS,
-    RF_PARAMS,
     CTR_TARGETS,
     CONV_TARGETS,
     ENG_TARGETS,
@@ -318,15 +316,10 @@ class RecommendationModel:
             features_dict, self._excel_lookup, self._normalise_value
         )
 
-    # ── Visual data loader — called once at startup via lifespan ───────
-    def _load_visual_data(self):
-        """
-        Delegates to excel_cache.load_visual_data().  Called once during the
-        lifespan handler at startup; the result is cached module-level in
-        excel_cache so every subsequent request hits the in-memory DataFrame
-        with no lock acquisition or function dispatch overhead.
-        """
-        _excel_cache.load_visual_data(BASE_DIR)
+    # NOTE: Visual data is loaded lazily on first request via visual_lookup.py.
+    # The former _load_visual_data() method (which was never called from lifespan)
+    # has been removed. To preload visual data at startup, call
+    # _excel_cache.load_visual_data(BASE_DIR) from the lifespan handler in server.py.
 
     @staticmethod
     def _build_visual_pkl():

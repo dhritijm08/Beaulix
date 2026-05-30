@@ -201,19 +201,17 @@ def build_visual_pkl(base_dir: str) -> None:
 
     os.makedirs(os.path.join(base_dir, "models"), exist_ok=True)
 
-    print(f"📂 Loading {brief_path} ...")
+    logger.info("Loading %s ...", brief_path)
     brief_df = (
         pd.read_excel(brief_path, sheet_name="Visual Brief")
         if os.path.exists(brief_path)
         else pd.DataFrame()
     )
-    print(f"📂 Loading {recs_path} ...")
+    logger.info("Loading %s ...", recs_path)
     recs_df = (
         pd.read_excel(recs_path)
         if os.path.exists(recs_path)
         else pd.DataFrame()
     )
     _jl.dump({"visual_brief": brief_df, "step2_recs": recs_df}, pkl_path)
-    print(
-        f"✅ Saved {pkl_path} — {len(brief_df):,} brief rows, {len(recs_df):,} step2 rows"
-    )
+    logger.info("Saved %s — %d brief rows, %d step2 rows", pkl_path, len(brief_df), len(recs_df))

@@ -195,71 +195,53 @@ function _validateBackendUrl(backendUrl) {
   }
 }
 
+/**
+ * _createMlProxy — factory that creates an onRequest handler forwarding POST
+ * requests to a given ML backend path.  Both mlPredict and mlPredictStep2 are
+ * structurally identical; this factory eliminates the duplication and ensures
+ * both endpoints always have identical auth/validation behaviour.
+ *
+ * @param {string} backendPath - e.g. "/predict" or "/predict-step2"
+ * @param {string} exportName  - used in error log messages
+ */
+function _createMlProxy(backendPath, exportName) {
+  return onRequest(
+    { secrets: [_beaulixApiKey, _beaulixBackendUrl], cors: ALLOWED_ORIGINS, timeoutSeconds: 60 },
+    async (req, res) => {
+      if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
+
+      try {
+        await _verifyFirebaseToken(req.headers.authorization || "");
+      } catch (err) {
+        res.status(401).json({ error: err.message });
+        return;
+      }
+
+      if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+        res.status(400).json({ error: "Request body must be a JSON object." });
+        return;
+      }
+
+      try {
+        _validateBackendUrl(_beaulixBackendUrl.value());
+        const { status, body } = await _forwardToBackend(
+          _beaulixBackendUrl.value(), backendPath,
+          _beaulixApiKey.value(), req.body,
+        );
+        res.status(status).json(body);
+      } catch (err) {
+        logger.error(`${exportName} proxy error`, {error: err.message});
+        res.status(502).json({ error: "ML backend unavailable. Please try again." });
+      }
+    },
+  );
+}
+
 /** Proxy /predict — Step 1 performance prediction. */
-exports.mlPredict = onRequest(
-  { secrets: [_beaulixApiKey, _beaulixBackendUrl], cors: ALLOWED_ORIGINS, timeoutSeconds: 60 },
-  async (req, res) => {
-    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-
-    // Require a valid Firebase ID token in the Authorization header.
-    try {
-      await _verifyFirebaseToken(req.headers.authorization || "");
-    } catch (err) {
-      res.status(401).json({ error: err.message });
-      return;
-    }
-
-    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
-      res.status(400).json({ error: "Request body must be a JSON object." });
-      return;
-    }
-
-    try {
-      _validateBackendUrl(_beaulixBackendUrl.value());
-      const { status, body } = await _forwardToBackend(
-        _beaulixBackendUrl.value(), "/predict",
-        _beaulixApiKey.value(), req.body,
-      );
-      res.status(status).json(body);
-    } catch (err) {
-      logger.error("mlPredict proxy error", {error: err.message});
-      res.status(502).json({ error: "ML backend unavailable. Please try again." });
-    }
-  },
-);
+exports.mlPredict = _createMlProxy("/predict", "mlPredict");
 
 /** Proxy /predict-step2 — Step 2 updated score after creative choices. */
-exports.mlPredictStep2 = onRequest(
-  { secrets: [_beaulixApiKey, _beaulixBackendUrl], cors: ALLOWED_ORIGINS, timeoutSeconds: 60 },
-  async (req, res) => {
-    if (req.method !== "POST") { res.status(405).json({ error: "Method not allowed" }); return; }
-
-    // Require a valid Firebase ID token in the Authorization header.
-    try {
-      await _verifyFirebaseToken(req.headers.authorization || "");
-    } catch (err) {
-      res.status(401).json({ error: err.message });
-      return;
-    }
-
-    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
-      res.status(400).json({ error: "Request body must be a JSON object." });
-      return;
-    }
-
-    try {
-      _validateBackendUrl(_beaulixBackendUrl.value());
-      const { status, body } = await _forwardToBackend(
-        _beaulixBackendUrl.value(), "/predict-step2",
-        _beaulixApiKey.value(), req.body,
-      );
-      res.status(status).json(body);
-    } catch (err) {
-      logger.error("mlPredictStep2 proxy error", {error: err.message});
-      res.status(502).json({ error: "ML backend unavailable. Please try again." });
-    }
-  },
-);
+exports.mlPredictStep2 = _createMlProxy("/predict-step2", "mlPredictStep2");
 
 
 // deleteCloudinaryAsset — called by:

@@ -372,6 +372,8 @@ async def predict_step2(request: Request, body: Step2PredictionRequest):
 @app.get("/visual-recommendations", dependencies=[Depends(require_api_key)])
 @limiter.limit("30/minute")
 async def get_visual_recommendations(request: Request, category: str, funnel: str, age_range: str = "25-34"):
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not yet loaded. Please retry in a moment.")
     try:
         vr = model.get_visual_recommendations(category, funnel, age_range)
         return JSONResponse(content=vr)
@@ -408,7 +410,7 @@ async def get_dataset_stats(request: Request):
             safe_cols = [c for c in df.columns if c not in ("timestamp",)]
             return {
                 'total_rows': len(df),
-                'columns': list(df.columns),
+                'columns': safe_cols,
             }
         return {'total_rows': 0, 'columns': []}
     except Exception as e:

@@ -1,7 +1,4 @@
 fastapi==0.115.6
-# ── Google Drive (used by download_data.py at build time) ──────────────
-google-auth==2.29.0
-google-api-python-client==2.126.0
 uvicorn==0.34.0
 scikit-learn==1.6.1
 pandas==2.2.2

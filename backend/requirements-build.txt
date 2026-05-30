@@ -1,0 +1,7 @@
+# requirements-build.txt
+# Build-time only — NOT installed in the production container.
+# Used by download_data.py to fetch Excel training data from Google Drive at deploy time.
+# Install via: pip install -r requirements-build.txt
+# ── Google Drive ───────────────────────────────────────────────────────
+google-auth==2.29.0
+google-api-python-client==2.126.0
