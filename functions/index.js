@@ -78,7 +78,7 @@ const _cloudinaryUploadPreset = defineSecret("CLOUDINARY_UPLOAD_PRESET");
  * are returned.  The API key and secret never leave the Functions runtime.
  */
 exports.cloudinaryConfig = onCall(
-  {secrets: [_cloudinaryCloudName, _cloudinaryUploadPreset]},
+  {secrets: [_cloudinaryCloudName, _cloudinaryUploadPreset], cors: ALLOWED_ORIGINS || true},
   async (request) => {
     // Require the caller to be authenticated — prevents anonymous enumeration.
     if (!request.auth) {
@@ -156,7 +156,7 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
 exports.getGpuUrl = onCall(
-  {secrets: [_beaulixGpuUrl]},
+  {secrets: [_beaulixGpuUrl], cors: ALLOWED_ORIGINS || true},
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Must be signed in to fetch GPU URL.");
@@ -249,7 +249,7 @@ exports.mlPredictStep2 = _createMlProxy("/predict-step2", "mlPredictStep2");
 //   • profile.html (lines 375-383) when a user replaces their avatar, to clean up the old asset.
 // Do NOT remove this function — it is actively wired up in both frontend pages.
 exports.deleteCloudinaryAsset = onCall(
-  { secrets: [_cloudinaryCloudName, _cloudinaryApiKey, _cloudinaryApiSecret] },
+  { secrets: [_cloudinaryCloudName, _cloudinaryApiKey, _cloudinaryApiSecret], cors: ALLOWED_ORIGINS || true },
   async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
