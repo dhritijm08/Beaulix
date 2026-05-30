@@ -1,6 +1,5 @@
-const {onCall, onRequest, HttpsError} = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
 const {v2: cloudinary} = require("cloudinary");
-const {defineSecret} = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const https = require("https");
 const http = require("http");
@@ -10,92 +9,65 @@ const {initializeApp, getApps} = require("firebase-admin/app");
 const {getAuth} = require("firebase-admin/auth");
 if (!getApps().length) initializeApp();
 
-// ── CORS — restrict ML endpoints to the known frontend origin ────────────────
-// Set BEAULIX_FRONTEND_URL as a Firebase environment variable:
-//   firebase functions:config:set app.frontend_url="https://your-app.web.app"
-// Falls back to false (no CORS) rather than wildcard if the variable is unset,
-// so a misconfigured deploy fails closed instead of open.
-// Known frontend origins. BEAULIX_FRONTEND_URL env var adds extras at runtime.
-// Hardcoding the production origin here ensures CORS works even without the
-// env var set, which was the cause of the header being missing on preflight.
+// ── Allowed CORS origins ──────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
   "https://beaulix-model.web.app",
   "https://beaulix-model.firebaseapp.com",
-  ...(process.env.BEAULIX_FRONTEND_URL ? [process.env.BEAULIX_FRONTEND_URL] : []),
 ];
+
+// ── CORS helper for onRequest functions ──────────────────────────────────────
+function _setCorsHeaders(req, res) {
+  const origin = req.headers.origin || "";
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.set("Access-Control-Allow-Origin", origin);
+  }
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set("Access-Control-Max-Age", "3600");
+}
 
 /**
  * Verify a Firebase ID token from an Authorization: Bearer <token> header.
- * Throws with a 401-appropriate message on any failure.
  * @param {string} authHeader - value of req.headers.authorization
  */
 async function _verifyFirebaseToken(authHeader) {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new HttpsError("unauthenticated", "Unauthorized: missing Bearer token");
+    throw new functions.https.HttpsError("unauthenticated", "Unauthorized: missing Bearer token");
   }
   try {
     await getAuth().verifyIdToken(authHeader.slice(7));
   } catch (_err) {
-    throw new HttpsError("unauthenticated", "Unauthorized: invalid or expired token");
+    throw new functions.https.HttpsError("unauthenticated", "Unauthorized: invalid or expired token");
   }
 }
 
-// ── ML backend proxy ──────────────────────────────────────────────────────────
-// The frontend must call Firebase Functions (/mlPredict, /mlPredictStep2) rather
-// than the FastAPI backend directly.  Benefits:
-//   • Backend URL never reaches the browser (hidden from DevTools).
-//   • BEAULIX_API_KEY never reaches the browser.
-//   • CSP connect-src only needs *.cloudfunctions.net / *.run.app.
-//   • Firebase auth is enforced here — unauthenticated callers are rejected.
-//
-// Deploy secrets:
-//   firebase functions:secrets:set BEAULIX_API_KEY
-//   firebase functions:secrets:set BEAULIX_BACKEND_URL   # e.g. https://1.2.3.4:8000
-// ─────────────────────────────────────────────────────────────────────────────
-
-const _beaulixApiKey = defineSecret("BEAULIX_API_KEY");
-const _beaulixBackendUrl = defineSecret("BEAULIX_BACKEND_URL");
-const _beaulixGpuUrl = defineSecret("BEAULIX_GPU_URL");
-
-// ── Cloudinary secrets ────────────────────────────────────────────────────────
-// Migrate from plain env vars to Firebase Secrets so credentials are available
-// in all deployment configurations (including Functions v2 cold starts).
-// Deploy with:
-//   firebase functions:secrets:set CLOUDINARY_CLOUD_NAME
-//   firebase functions:secrets:set CLOUDINARY_API_KEY
-//   firebase functions:secrets:set CLOUDINARY_API_SECRET
-//   firebase functions:secrets:set CLOUDINARY_UPLOAD_PRESET
-const _cloudinaryCloudName = defineSecret("CLOUDINARY_CLOUD_NAME");
-const _cloudinaryApiKey = defineSecret("CLOUDINARY_API_KEY");
-const _cloudinaryApiSecret = defineSecret("CLOUDINARY_API_SECRET");
-const _cloudinaryUploadPreset = defineSecret("CLOUDINARY_UPLOAD_PRESET");
+// ── Secret helpers — read from Firebase environment config ───────────────────
+// Set with: firebase functions:config:set beaulix.gpu_url="https://..."
+//           firebase functions:config:set beaulix.backend_url="https://..."
+//           firebase functions:config:set beaulix.api_key="..."
+//           firebase functions:config:set cloudinary.cloud_name="..."
+//           firebase functions:config:set cloudinary.api_key="..."
+//           firebase functions:config:set cloudinary.api_secret="..."
+//           firebase functions:config:set cloudinary.upload_preset="..."
+function _cfg() {
+  return functions.config();
+}
 
 /**
- * cloudinaryConfig — returns the Cloudinary cloud name and unsigned upload preset
- * to the authenticated frontend so window.__CLOUDINARY_CONFIG__ can be set at
- * runtime without hardcoding credentials in static HTML.
- *
- * Firebase Hosting is static and cannot server-render a <script> snippet, so
- * this thin Cloud Function acts as the injection point.  The frontend calls it
- * once on load (see cloudinary-config.js) and caches the result in memory.
- *
- * Only the cloud name and upload preset (both non-sensitive for unsigned uploads)
- * are returned.  The API key and secret never leave the Functions runtime.
+ * cloudinaryConfig — returns the Cloudinary cloud name and unsigned upload
+ * preset to the authenticated frontend.
  */
-exports.cloudinaryConfig = onCall(
-    // cors: true is safe — request.auth is enforced inside the handler.
-    {secrets: [_cloudinaryCloudName, _cloudinaryUploadPreset], cors: true},
-    async (request) => {
-    // Require the caller to be authenticated — prevents anonymous enumeration.
-      if (!request.auth) {
-        throw new HttpsError("unauthenticated", "Must be signed in to fetch Cloudinary config.");
-      }
-      return {
-        cloud: _cloudinaryCloudName.value(),
-        preset: _cloudinaryUploadPreset.value(),
-      };
-    },
-);
+exports.cloudinaryConfig = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated", "Must be signed in to fetch Cloudinary config.");
+  }
+  const cfg = _cfg();
+  return {
+    cloud: cfg.cloudinary && cfg.cloudinary.cloud_name,
+    preset: cfg.cloudinary && cfg.cloudinary.upload_preset,
+  };
+});
 
 /**
  * Forward a JSON body to the ML backend and return the response.
@@ -110,13 +82,9 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
     const payload = JSON.stringify(body);
     const url = new URL(path, backendUrl);
 
-    // Enforce HTTPS in production to protect the API key in transit.
-    // If BEAULIX_BACKEND_URL is accidentally set to an http:// URL in
-    // a non-development environment, reject the request immediately.
     if (url.protocol !== "https:" && process.env.NODE_ENV !== "development") {
       reject(new Error(
-          `BEAULIX_BACKEND_URL must use HTTPS in production. Got: ${url.protocol}//... ` +
-        "Update the secret with an https:// URL.",
+          `BEAULIX_BACKEND_URL must use HTTPS in production. Got: ${url.protocol}//...`,
       ));
       return;
     }
@@ -134,15 +102,17 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
       },
     };
     const req = transport.request(options, (res) => {
-      let data = "";
+      let responseData = "";
       res.on("data", (chunk) => {
-        data += chunk;
+        responseData += chunk;
       });
       res.on("end", () => {
         try {
-          resolve({status: res.statusCode, body: JSON.parse(data)});
+          resolve({status: res.statusCode, body: JSON.parse(responseData)});
         } catch (e) {
-          reject(new Error(`Backend returned non-JSON (status ${res.statusCode}): ${data.slice(0, 200)}`));
+          reject(new Error(
+              `Backend returned non-JSON (status ${res.statusCode}): ${responseData.slice(0, 200)}`,
+          ));
         }
       });
     });
@@ -156,117 +126,90 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
 }
 
 /**
- * getGpuUrl — returns the current GPU (Colab/ngrok) base URL to the authenticated
- * frontend so the URL is never hardcoded in static HTML and automatically updates
- * when the Colab session restarts and generates a new ngrok URL.
- *
- * Implemented as onCall so Firebase handles CORS preflight automatically and
- * reliably — onCall always sets the correct Access-Control-Allow-Origin header
- * regardless of firebase-functions version. The caller must be authenticated
- * (request.auth is checked); no separate token verification needed.
- *
- * Frontend calls this with httpsCallable() — see generator-init.js.
- *
- * Deploy the secret once:
- *   firebase functions:secrets:set BEAULIX_GPU_URL   # e.g. https://abc123.ngrok.io
- * Update it after each Colab restart:
- *   firebase functions:secrets:set BEAULIX_GPU_URL
+ * getGpuUrl — returns the current GPU (Colab/ngrok) base URL to the
+ * authenticated frontend. Reads from Firebase environment config.
  */
-exports.getGpuUrl = onCall(
-    // cors: true is safe here because request.auth is enforced below —
-    // unauthenticated callers are rejected before the secret is read.
-    // A strict origin allowlist on onCall v2 can silently fail preflight
-    // when the Cloud Run URL differs from the cloudfunctions.net URL that
-    // httpsCallable() constructs, causing the CORS error seen in production.
-    {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: true},
-    async (request) => {
-    // onCall populates request.auth automatically from the Firebase ID token
-    // sent by the client SDK — no manual token parsing needed.
-      if (!request.auth) {
-        throw new HttpsError("unauthenticated", "Must be signed in to fetch GPU URL.");
-      }
-      const url = _beaulixGpuUrl.value();
-      // "failed-precondition" is the correct HttpsError code for a missing config —
-      // "not-found" is not a valid gRPC/HttpsError status and causes an unhandled
-      // exception that surfaces as a generic "internal" error on the client.
-      if (!url) {
-        logger.error("BEAULIX_GPU_URL secret is not set. Run: firebase functions:secrets:set BEAULIX_GPU_URL");
-        throw new HttpsError("failed-precondition", "GPU URL is not configured. Set the BEAULIX_GPU_URL secret.");
-      }
-      return {url};
-    },
-);
+exports.getGpuUrl = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+        "unauthenticated", "Must be signed in to fetch GPU URL.");
+  }
+  const url = _cfg().beaulix && _cfg().beaulix.gpu_url;
+  if (!url) {
+    logger.error("beaulix.gpu_url config not set. Run: firebase functions:config:set beaulix.gpu_url=\"https://...\"");
+    throw new functions.https.HttpsError(
+        "failed-precondition", "GPU URL is not configured.");
+  }
+  return {url};
+});
 
 /**
- * Validate the BEAULIX_BACKEND_URL secret at request time (before forwarding).
- * This surfaces a clear error rather than an unhandled rejection inside
- * _forwardToBackend if the secret is missing or misconfigured.
- *
- * @param {string} backendUrl - value of _beaulixBackendUrl.value()
- * @throws {HttpsError} if the URL is empty or not HTTPS in production
+ * Validate the backend URL from config.
+ * @param {string} backendUrl
  */
 function _validateBackendUrl(backendUrl) {
   if (!backendUrl) {
-    throw new HttpsError("internal", "BEAULIX_BACKEND_URL secret is not set.");
+    throw new functions.https.HttpsError("internal", "beaulix.backend_url config is not set.");
   }
   if (process.env.NODE_ENV !== "development") {
     let parsed;
     try {
       parsed = new URL(backendUrl);
     } catch (_) {
-      throw new HttpsError("internal", "BEAULIX_BACKEND_URL is not a valid URL.");
+      throw new functions.https.HttpsError("internal", "beaulix.backend_url is not a valid URL.");
     }
     if (parsed.protocol !== "https:") {
-      throw new HttpsError(
+      throw new functions.https.HttpsError(
           "internal",
-          `BEAULIX_BACKEND_URL must use HTTPS in production. Got: ${parsed.protocol}//...`,
+          `beaulix.backend_url must use HTTPS in production. Got: ${parsed.protocol}//...`,
       );
     }
   }
 }
 
 /**
- * _createMlProxy — factory that creates an onRequest handler forwarding POST
- * requests to a given ML backend path.  Both mlPredict and mlPredictStep2 are
- * structurally identical; this factory eliminates the duplication and ensures
- * both endpoints always have identical auth/validation behaviour.
- *
- * @param {string} backendPath - e.g. "/predict" or "/predict-step2"
- * @param {string} exportName  - used in error log messages
+ * _createMlProxy — factory for ML backend proxy onRequest handlers.
+ * @param {string} backendPath - e.g. "/predict"
+ * @param {string} exportName
  */
 function _createMlProxy(backendPath, exportName) {
-  return onRequest(
-      {secrets: [_beaulixApiKey, _beaulixBackendUrl], cors: ALLOWED_ORIGINS, timeoutSeconds: 60},
-      async (req, res) => {
-        if (req.method !== "POST") {
-          res.status(405).json({error: "Method not allowed"}); return;
-        }
+  return functions.runWith({timeoutSeconds: 60}).https.onRequest(async (req, res) => {
+    _setCorsHeaders(req, res);
 
-        try {
-          await _verifyFirebaseToken(req.headers.authorization || "");
-        } catch (err) {
-          res.status(401).json({error: err.message});
-          return;
-        }
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
 
-        if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
-          res.status(400).json({error: "Request body must be a JSON object."});
-          return;
-        }
+    if (req.method !== "POST") {
+      res.status(405).json({error: "Method not allowed"});
+      return;
+    }
 
-        try {
-          _validateBackendUrl(_beaulixBackendUrl.value());
-          const {status, body} = await _forwardToBackend(
-              _beaulixBackendUrl.value(), backendPath,
-              _beaulixApiKey.value(), req.body,
-          );
-          res.status(status).json(body);
-        } catch (err) {
-          logger.error(`${exportName} proxy error`, {error: err.message});
-          res.status(502).json({error: "ML backend unavailable. Please try again."});
-        }
-      },
-  );
+    try {
+      await _verifyFirebaseToken(req.headers.authorization || "");
+    } catch (err) {
+      res.status(401).json({error: err.message});
+      return;
+    }
+
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      res.status(400).json({error: "Request body must be a JSON object."});
+      return;
+    }
+
+    try {
+      const cfg = _cfg();
+      const backendUrl = cfg.beaulix && cfg.beaulix.backend_url;
+      const apiKey = cfg.beaulix && cfg.beaulix.api_key;
+      _validateBackendUrl(backendUrl);
+      const {status, body} = await _forwardToBackend(backendUrl, backendPath, apiKey, req.body);
+      res.status(status).json(body);
+    } catch (err) {
+      logger.error(`${exportName} proxy error`, {error: err.message});
+      res.status(502).json({error: "ML backend unavailable. Please try again."});
+    }
+  });
 }
 
 /** Proxy /predict — Step 1 performance prediction. */
@@ -275,54 +218,47 @@ exports.mlPredict = _createMlProxy("/predict", "mlPredict");
 /** Proxy /predict-step2 — Step 2 updated score after creative choices. */
 exports.mlPredictStep2 = _createMlProxy("/predict-step2", "mlPredictStep2");
 
+/**
+ * deleteCloudinaryAsset — deletes a Cloudinary asset by URL.
+ * Called by history.html and profile.html.
+ */
+exports.deleteCloudinaryAsset = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+  }
 
-// deleteCloudinaryAsset — called by:
-//   • history.html (lines 445-449) via firebase-functions.js when a user deletes a generated asset.
-//   • profile.html (lines 375-383) when a user replaces their avatar, to clean up the old asset.
-// Do NOT remove this function — it is actively wired up in both frontend pages.
-exports.deleteCloudinaryAsset = onCall(
-    // cors: true is safe — request.auth is enforced inside the handler.
-    {secrets: [_cloudinaryCloudName, _cloudinaryApiKey, _cloudinaryApiSecret], cors: true},
-    async (request) => {
-      if (!request.auth) {
-        throw new HttpsError("unauthenticated", "You must be logged in.");
-      }
+  const cfg = _cfg();
+  cloudinary.config({
+    cloud_name: cfg.cloudinary && cfg.cloudinary.cloud_name,
+    api_key: cfg.cloudinary && cfg.cloudinary.api_key,
+    api_secret: cfg.cloudinary && cfg.cloudinary.api_secret,
+  });
 
-      // Configure Cloudinary from secrets at call time (not module load time)
-      // so credentials are guaranteed to be injected by the Functions v2 runtime.
-      cloudinary.config({
-        cloud_name: _cloudinaryCloudName.value(),
-        api_key: _cloudinaryApiKey.value(),
-        api_secret: _cloudinaryApiSecret.value(),
-      });
+  const {cloudinaryUrl, resourceType} = data;
 
-      const {cloudinaryUrl, resourceType} = request.data;
+  if (!cloudinaryUrl) {
+    throw new functions.https.HttpsError("invalid-argument", "cloudinaryUrl is required.");
+  }
 
-      if (!cloudinaryUrl) {
-        throw new HttpsError("invalid-argument", "cloudinaryUrl is required.");
-      }
+  try {
+    const urlParts = cloudinaryUrl.split("/upload/");
+    if (urlParts.length < 2) throw new Error("Invalid Cloudinary URL format");
 
-      try {
-        const urlParts = cloudinaryUrl.split("/upload/");
-        if (urlParts.length < 2) throw new Error("Invalid Cloudinary URL format");
+    const publicIdWithExt = urlParts[1].replace(/^v\d+\//, "");
+    const publicId = publicIdWithExt.replace(/\.[^/.]+$/, "");
+    const type = resourceType === "video" ? "video" : "image";
 
-        const publicIdWithExt = urlParts[1].replace(/^v\d+\//, "");
-        const publicId = publicIdWithExt.replace(/\.[^/.]+$/, "");
-        const type = resourceType === "video" ? "video" : "image";
+    const result = await cloudinary.uploader.destroy(publicId, {resource_type: type});
 
-        const result = await cloudinary.uploader.destroy(publicId, {
-          resource_type: type,
-        });
+    logger.info("Cloudinary asset deleted", {resourceType: type, result: result.result});
 
-        logger.info("Cloudinary asset deleted", {resourceType: type, result: result.result});
-
-        if (result.result === "ok" || result.result === "not found") {
-          return {success: true, result: result.result};
-        } else {
-          throw new Error(`Cloudinary delete failed: ${result.result}`);
-        }
-      } catch (e) {
-        logger.error("Cloudinary delete error", {error: e.message});
-        throw new HttpsError("internal", e.message);
-      }
-    });
+    if (result.result === "ok" || result.result === "not found") {
+      return {success: true, result: result.result};
+    } else {
+      throw new Error(`Cloudinary delete failed: ${result.result}`);
+    }
+  } catch (e) {
+    logger.error("Cloudinary delete error", {error: e.message});
+    throw new functions.https.HttpsError("internal", e.message);
+  }
+});
