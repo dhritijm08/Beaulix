@@ -20,23 +20,20 @@
     let GPU_API_BASE = null;
     (async () => {
       try {
-        // Use plain fetch + Firebase ID token instead of httpsCallable.
-        // getGpuUrl is now an onRequest function so CORS preflight works reliably.
+        // Fetch GPU URL via the Firebase Hosting rewrite at /api/getGpuUrl.
+        // This is a same-origin request so no CORS preflight is triggered.
+        // The Cloud Function verifies the Firebase ID token in the Authorization header.
         const { app } = await import('./firebase-config.js');
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const auth = getAuth(app);
-        // Wait for auth to resolve so we have a valid ID token
-        const idToken = await new Promise((resolve, reject) => {
-          const unsub = auth.onAuthStateChanged(async user => {
-            unsub();
-            if (!user) { reject(new Error('Not authenticated')); return; }
-            try { resolve(await user.getIdToken()); } catch (e) { reject(e); }
-          });
+        const user = await new Promise(resolve => {
+          const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
         });
-        const resp = await fetch(
-          'https://us-central1-beaulix-model.cloudfunctions.net/getGpuUrl',
-          { headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' } }
-        );
+        if (!user) throw new Error('Not signed in');
+        const idToken = await user.getIdToken();
+        const resp = await fetch('/api/getGpuUrl', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${idToken}` },
+        });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         GPU_API_BASE = data.url;
