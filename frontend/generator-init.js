@@ -851,3 +851,5 @@
       setTimeout(() => showToast('Password updated!', 'success'), 800);
     }
   }
+
+    }); // end DOMContentLoaded
