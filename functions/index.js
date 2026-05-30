@@ -4,7 +4,6 @@ const {defineSecret} = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const https = require("https");
 const http = require("http");
-const corsLib = require("cors");
 
 // ── Firebase Admin — initialised once at module load ─────────────────────────
 const {initializeApp, getApps} = require("firebase-admin/app");
@@ -166,36 +165,32 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  * Update it after each Colab restart:
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
-// Build a cors middleware instance once so it is reused across warm invocations.
-// Using the `cors` npm package is the only reliable way to handle OPTIONS
-// preflight in Firebase Functions v7 onRequest handlers — the built-in `cors`
-// option no longer guarantees preflight responses include the required headers.
-const _gpuUrlCors = corsLib({
-  origin: ALLOWED_ORIGINS,
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 204,
-});
-
 exports.getGpuUrl = onRequest(
-  // Pass cors: false so the framework does NOT intercept preflight before our
-  // middleware runs — the corsLib instance above owns the full CORS lifecycle.
-  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: false},
-  (req, res) => {
-    _gpuUrlCors(req, res, async () => {
-      // Auth: verify Firebase ID token
-      try {
-        await _verifyFirebaseToken(req.headers.authorization || "");
-      } catch (err) {
-        res.status(401).json({error: err.message});
-        return;
-      }
+  // cors: true lets the Firebase Functions v7 framework handle OPTIONS preflight
+  // automatically — this is the only option guaranteed to work in all v7 configs.
+  // Origin restriction is enforced inside the handler (see below) so unauthorised
+  // origins get a 403 on non-preflight requests even though preflight is open.
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: true},
+  async (req, res) => {
+    // Reject non-allowed origins on actual requests (preflight is handled above).
+    const origin = req.headers.origin || "";
+    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+      res.status(403).json({error: "Origin not allowed."});
+      return;
+    }
 
-      // Return GPU URL from secret
-      const url = _beaulixGpuUrl.value();
-      if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
-      res.status(200).json({url});
-    });
+    // Auth: verify Firebase ID token
+    try {
+      await _verifyFirebaseToken(req.headers.authorization || "");
+    } catch (err) {
+      res.status(401).json({error: err.message});
+      return;
+    }
+
+    // Return GPU URL from secret
+    const url = _beaulixGpuUrl.value();
+    if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
+    res.status(200).json({url});
   },
 );
 
