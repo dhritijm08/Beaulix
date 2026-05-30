@@ -1,14 +1,14 @@
 
   import { app } from './firebase-config.js';
-  import { getAuth, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+  import { getAuth, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+  import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
   import { initNavAuth, getLocalAvatar, getInitials, renderNavAvatar } from './nav-module.js';
   // Cloudinary credentials fetched at runtime
   let CLOUDINARY_CLOUD = null;
   let CLOUDINARY_PRESET = null;
   async function _ensureCloudinaryConfig() {
     if (CLOUDINARY_CLOUD && CLOUDINARY_PRESET) return;
-    const { getFunctions: _getFns, httpsCallable: _call } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+    const { getFunctions: _getFns, httpsCallable: _call } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
     const fns = _getFns(app);
     const result = await _call(fns, 'cloudinaryConfig')();
     CLOUDINARY_CLOUD = result.data.cloud;

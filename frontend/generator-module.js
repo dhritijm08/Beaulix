@@ -1,5 +1,5 @@
     import { app } from './firebase-config.js';
-    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
     import { initNavAuth } from './nav-module.js';
     import { initCloudinaryModule } from './cloudinary-module.js';
     import { initStep2Module, renderImprovementBanner } from './step2-module.js';

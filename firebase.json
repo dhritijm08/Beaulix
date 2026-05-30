@@ -8,6 +8,15 @@
     ],
     "headers": [
       {
+        "source": "suppress-firebase-warn.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300, stale-while-revalidate=600"
+          }
+        ]
+      },
+      {
         "source": "**/*.@(js|css)",
         "headers": [
           {
@@ -58,5 +67,18 @@
   },
   "firestore": {
     "rules": "firestore.rules"
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
 }

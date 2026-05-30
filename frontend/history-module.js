@@ -1,7 +1,7 @@
 
   import { app } from './firebase-config.js';
-  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+  import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
   import { initNavAuth } from './nav-module.js';
 
   const auth = getAuth(app);
@@ -234,7 +234,7 @@
   async function deleteFromCloudinary(cloudinaryUrl) {
     if (!cloudinaryUrl) return;
     try {
-      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+      const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
       const functions = getFunctions(app);
       const deleteAsset = httpsCallable(functions, 'deleteCloudinaryAsset');
       const resourceType = cloudinaryUrl.includes('/video/') ? 'video' : 'image';

@@ -1,7 +1,4 @@
 // firebase-config.js — single source of truth for Firebase configuration.
-// Install the console.warn suppressor FIRST, before any Firebase module runs,
-// so the feature_collector "deprecated parameters" warning is swallowed.
-import './suppress-firebase-warn.js';
 // Import from this file in every HTML module script instead of copy-pasting the config.
 //
 // Uses the /__/firebase/init.js auto-config pattern provided by Firebase Hosting.
@@ -14,7 +11,7 @@ import './suppress-firebase-warn.js';
 //
 // See: https://firebase.google.com/docs/hosting/reserved-urls
 
-import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 
 async function loadFirebaseConfig() {
   // 1. Try the Firebase Hosting reserved URL (production + emulator).

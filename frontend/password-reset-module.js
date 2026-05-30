@@ -1,6 +1,6 @@
 
   import { app } from './firebase-config.js';
-  import { getAuth, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getAuth, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
   const auth = getAuth(app);
 

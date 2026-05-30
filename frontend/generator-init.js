@@ -38,8 +38,8 @@
     (async () => {
       try {
         const { app } = await import('./firebase-config.js');
-        const { getAuth }    = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+        const { getAuth }    = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
 
         // Wait for auth state once.
         const user = await new Promise(resolve => {

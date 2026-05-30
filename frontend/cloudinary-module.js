@@ -10,7 +10,7 @@
  */
 
 import { getFirestore, collection, addDoc, serverTimestamp }
-  from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 // Cloudinary credentials are fetched at runtime from the cloudinaryConfig
 // Firebase Function so they are never hardcoded in static source.
 // cloudinary-config.js has been removed.
@@ -18,7 +18,7 @@ let CLOUDINARY_CLOUD = null;
 let CLOUDINARY_PRESET = null;
 async function _ensureCloudinaryConfig() {
   if (CLOUDINARY_CLOUD && CLOUDINARY_PRESET) return;
-  const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+  const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
   const { app } = await import('./firebase-config.js');
   const fns = getFunctions(app);
   const cloudinaryConfig = httpsCallable(fns, 'cloudinaryConfig');
