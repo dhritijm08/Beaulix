@@ -68,6 +68,8 @@
           _mlBackendUrl = backendDoc.exists() ? backendDoc.data()?.url : null;
           if (!_mlBackendUrl) {
             if (DEBUG) console.warn('config/backend doc missing — ML engine unavailable.');
+          } else {
+            checkMLEngine(); // URL is now set — run the health check immediately
           }
         } catch (gpuErr) {
           if (DEBUG) console.warn('Firestore config read failed:', gpuErr.message);
