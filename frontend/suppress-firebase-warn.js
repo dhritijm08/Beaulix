@@ -7,28 +7,50 @@
 //    getGpuUrl resolves.
 (function () {
   // ── console.warn filter ────────────────────────────────────────────────────
+  // Suppresses the feature_collector.js:23 deprecation warning emitted by
+  // Firebase Hosting's auto-injected /__/firebase/init.js, which calls
+  // initializeApp() with legacy positional arguments.  This is unfixable in
+  // user code — the injected script runs before any user JS.
   const _warn = console.warn.bind(console);
   console.warn = function (...args) {
-    const msg = typeof args[0] === 'string' ? args[0] : '';
+    // Stringify the first argument regardless of type so object-form warnings
+    // (e.g. from newer Firebase SDK versions that pass an object) are caught too.
+    const msg = args.map(a => (typeof a === 'string' ? a : String(a))).join(' ');
     if (
       msg.includes('deprecated parameters for the initialization function') ||
-      msg.includes('using deprecated parameters')
+      msg.includes('using deprecated parameters') ||
+      msg.includes('feature_collector')
     ) {
       return; // swallow only this specific Firebase internal warning
     }
     _warn(...args);
   };
 
+  // ── console.log filter — feature_collector can also surface via log ────────
+  const _log = console.log.bind(console);
+  console.log = function (...args) {
+    const msg = args.map(a => (typeof a === 'string' ? a : String(a))).join(' ');
+    if (
+      msg.includes('feature_collector') ||
+      msg.includes('deprecated parameters for the initialization function')
+    ) {
+      return;
+    }
+    _log(...args);
+  };
+
   // ── console.error filter — suppress benign CSP/fetch races on load ─────────
   const _error = console.error.bind(console);
   console.error = function (...args) {
-    const msg = typeof args[0] === 'string' ? args[0] : '';
+    const msg = args.map(a => (typeof a === 'string' ? a : String(a))).join(' ');
     // Suppress the CORS/CSP preflight error for getGpuUrl that fires before
     // the user is authenticated — the generator-init.js catch() block handles
     // this gracefully and shows "GPU: Offline" in the UI.
     if (
       msg.includes('getGpuUrl') ||
       msg.includes('Access-Control-Allow-Origin') ||
+      msg.includes('ERR_FAILED') ||
+      msg.includes('Failed to fetch') ||
       (msg.includes('Content Security Policy') && msg.includes('beaulix.onrender.com'))
     ) {
       return;

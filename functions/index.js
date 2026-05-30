@@ -166,7 +166,7 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
 exports.getGpuUrl = onRequest(
-  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10},
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: ALLOWED_ORIGINS},
   async (req, res) => {
     // CORS: handle preflight and set headers on all responses
     const origin = req.headers.origin || "";
