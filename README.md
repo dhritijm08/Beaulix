@@ -1,36 +1,33 @@
-
 # Beaulix ✨
+
+AI-powered beauty and wellness recommendation platform. Enter your audience profile and product category; Beaulix returns predicted performance metrics (CTR, conversion, engagement), AI-generated ad copy, audience targeting suggestions, and visual brief recommendations — all powered by Random Forest models trained on a 97,920+ row dataset.
 
 ---
 
 ## 🚨 CRITICAL — Action Required Before Using This Repo
 
-**A Firebase Admin SDK private key was found in this repository.**
-The affected file is `beaulix-model-firebase-adminsdk-fbsvc-455edb495a.json`.
-The private key in the committed version has been replaced with a placeholder, but
-**the original key must be revoked immediately** even if the repo is private.
+**A Firebase Admin SDK private key was found in this repository.**  
+The affected file is `beaulix-model-firebase-adminsdk-fbsvc-455edb495a.json`.  
+The private key in the committed version has been replaced with a placeholder, but **the original key must be revoked immediately** even if the repo is private.
 
 ### Steps (do these now, in order):
 
-1. **Revoke the key** at [https://console.cloud.google.com/iam-admin/serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
-   — find service account `firebase-adminsdk-fbsvc@beaulix-model.iam.gserviceaccount.com`,
-   delete key ID `455edb495a3cf89bc35ad04b63b341f5aeb903ba`.
+1. **Revoke the key** at [https://console.cloud.google.com/iam-admin/serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts) — find service account `firebase-adminsdk-fbsvc@beaulix-model.iam.gserviceaccount.com`, delete key ID `455edb495a3cf89bc35ad04b63b341f5aeb903ba`.
 
 2. **Create a new key** and store it as a Render environment variable:
-   `GOOGLE_SERVICE_ACCOUNT_JSON=<full JSON content>`
+   ```
+   GOOGLE_SERVICE_ACCOUNT_JSON=<full JSON content>
+   ```
    Never save it as a file in the repository.
 
 3. **Purge the key from git history** (even if already rotated — history is searchable):
    ```bash
-   # Using git-filter-repo (recommended):
    pip install git-filter-repo
    git filter-repo --path beaulix-model-firebase-adminsdk-fbsvc-455edb495a.json --invert-paths
    git push --force --all
    ```
 
-4. **Delete `config/apiKey` from Firestore** (Firebase Console → Firestore → config collection).
-   The ML API key is now managed exclusively as a Firebase Secret (`BEAULIX_API_KEY`) and
-   is no longer fetched from Firestore by the browser.
+4. **Delete `config/apiKey` from Firestore** (Firebase Console → Firestore → config collection). The ML API key is now managed exclusively as a Firebase Secret (`BEAULIX_API_KEY`) and is no longer fetched from Firestore by the browser.
 
 5. **Set the Firebase Secret** if not already done:
    ```bash
@@ -41,199 +38,222 @@ The private key in the committed version has been replaced with a placeholder, b
 
 ## ⚠️ Security Notice
 
-- **Firebase Admin SDK keys** (`beaulix-model-*.json`, `*adminsdk*.json`) are gitignored.  
-  Store them via Render environment variable `GOOGLE_SERVICE_ACCOUNT_JSON` only.
-- **ML API key** (`BEAULIX_API_KEY`) and **Cloudinary credentials** are managed via Firebase Secrets.  
-  The browser **never** receives the API key — all ML calls go through Firebase Cloud Functions.  
-  See `functions/index.js` and `.env.example` for the full list of required secrets.
+- **Firebase Admin SDK keys** (`beaulix-model-*.json`, `*adminsdk*.json`) are gitignored. Store them via Render environment variable `GOOGLE_SERVICE_ACCOUNT_JSON` only.
+- **ML API key** (`BEAULIX_API_KEY`) and **Cloudinary credentials** are managed via Firebase Secrets. The browser never receives the API key — all ML calls go through Firebase Cloud Functions. See `functions/index.js` and `.env.example` for the full list of required secrets.
 - If a key is ever accidentally committed, rotate it immediately and purge git history.
 
+---
 
-Beaulix is an AI-powered beauty and wellness recommendation platform that provides personalized suggestions based on user preferences and analysis.  
-The project combines a **FastAPI backend** with a responsive frontend to deliver an interactive recommendation experience.
+## Features
+
+- **Two-step recommendation flow** — Step 1 predicts baseline performance; Step 2 refines predictions after the user selects creative choices (brand style, aspect ratio, output type) and returns a before/after improvement delta
+- **AI-generated ad copy** — hook, headline, description, CTA, and offer per request
+- **Audience targeting** — platform suggestions, tone, and demographic targeting
+- **Visual brief** — shot type, lighting, colour palette, and styling recommendations
+- **Confidence scoring** — percentile rank against similar profiles in the dataset
+- **Recommendation history** — per-user history stored in Firestore
+- **User auth** — login, signup, password reset via Firebase Authentication
+- **Avatar uploads** — Cloudinary integration via Firebase Cloud Functions (API key never exposed to browser)
+- **Rate limiting** — SlowAPI (30 req/min on prediction endpoints)
+- **Background retraining** — model retrains in a dedicated thread pool on new predictions without blocking inference
 
 ---
 
-# Features
+## Project Structure
 
-- Personalized beauty and wellness recommendations
-- AI/ML-based recommendation engine
-- FastAPI backend with REST APIs
-- Responsive frontend interface
-- Firebase integration
-- Cloudinary media support
-- Recommendation history tracking
-- Authentication pages (login, signup, password reset)
-- Rate limiting and API protection
-- Dataset-driven prediction system
-
----
-
-# Project Structure
-
-```bash
+```
 Beaulix/
 │
 ├── backend/
-│   ├── server.py                 # Main FastAPI server
-│   ├── model.py                  # Recommendation model logic
-│   ├── constants.py              # Project constants
-│   ├── train_simple_model.py     # Initial model training script
-│   ├── dataset.csv               # Dataset used for predictions
-│   ├── requirements.txt          # Backend dependencies
-│   ├── models/
-│   │   └── random_forest_models.pkl
-│   └── start.sh                  # Backend startup script
+│   ├── server.py                         # FastAPI app, all endpoints, lifespan management
+│   ├── model.py                          # RecommendationModel: Random Forest inference & retraining
+│   ├── confidence.py                     # Confidence score & percentile calculation
+│   ├── targeting.py                      # Audience targeting logic
+│   ├── copy_engine.py                    # Ad copy generation
+│   ├── copy_constants.py                 # Copy templates and tone constants
+│   ├── visual_lookup.py                  # Visual brief lookup from Excel cache
+│   ├── excel_cache.py                    # In-memory Excel data cache
+│   ├── cache_manager.py                  # Cache loading and refresh logic
+│   ├── build_visual_cache.py             # One-time script to pre-build visual cache pkl
+│   ├── constants.py                      # Shared constants (categories, funnel stages, etc.)
+│   ├── step2_engine.py                   # Step 2 delta/improvement calculation
+│   ├── step2_constants.py                # Step 2 brand styles, aspect ratios, output types
+│   ├── dataset.py                        # Dataset loading and append helpers
+│   ├── download_data.py                  # Data download utility
+│   ├── retrain.py                        # Background retrain orchestration
+│   ├── locks.py                          # Retrain concurrency lock
+│   ├── train_simple_model.py             # Standalone model training script
+│   ├── start.sh                          # Startup script with supervised restart loop
+│   ├── requirements.txt                  # Production dependencies
+│   ├── requirements-dev.txt              # Dev/test dependencies (pytest, httpx)
+│   ├── requirements-build.txt            # Build-time dependencies
+│   ├── .python-version                   # Pinned Python version
+│   ├── beaulix_combinatorial_predictions.xlsx  # Training dataset (~97,920 rows)
+│   ├── beaulix_step2_recommendations.xlsx      # Step 2 recommendation data
+│   ├── beaulix_visual_brief.xlsx               # Visual brief lookup data
+│   └── tests/
+│       ├── test_endpoints.py
+│       ├── test_copy_engine.py
+│       └── test_targeting.py
 │
 ├── colab/
-│   └── sdxl_model.py             # SDXL image generation (Colab/GPU server)
+│   ├── sdxl_model.py                     # SDXL image generation (GPU/Colab only)
+│   └── tune/                             # Background music assets (bg_music_01–10.mp3)
 │
 ├── frontend/
-│   ├── index.html                # Landing page
-│   ├── generator.html            # Recommendation generator
-│   ├── history.html              # User history page
-│   ├── login.html                # Login page
-│   ├── profile.html              # User profile page
-│   ├── firebase-config.js        # Firebase configuration
-│   └── *.css / *.js              # Styling and scripts
+│   ├── index.html / index-init.js / index-module.js      # Landing page
+│   ├── generator.html / generator-init.js / generator-module.js  # Recommendation generator (Step 1 + 2)
+│   ├── history.html / history-module.js                  # Recommendation history
+│   ├── login.html / login-module.js                      # Login
+│   ├── signup.html / signup-module.js                    # Signup
+│   ├── profile.html / profile-module.js                  # User profile & avatar upload
+│   ├── password-reset.html / password-reset-module.js    # Password reset request
+│   ├── reset-action.html / reset-action-module.js        # Password reset action handler
+│   ├── reset-bridge.html / reset-bridge-scripts.js       # Firebase reset bridge
+│   ├── 404.html                                          # Custom 404 page
+│   ├── nav-module.js                                     # Shared navigation
+│   ├── cloudinary-module.js                              # Cloudinary upload (via Cloud Functions)
+│   ├── firebase-config.js                                # Firebase SDK initialisation
+│   ├── suppress-firebase-warn.js                         # Suppresses noisy SDK console warnings
+│   ├── auth.css / generator.css / layout.css / theme.css # Stylesheets
+│   └── *.jpg / *.webp / *.png / *.mp4                    # Static media assets
 │
-├── firebase.json
-├── .firebaserc
-└── .env.example
+├── functions/
+│   ├── index.js                          # Firebase Cloud Functions (Cloudinary proxy, ML key relay)
+│   └── package.json                      # Node 18, firebase-functions ^4.9.0, cloudinary ^2.10.0
+│
+├── firebase.json                         # Firebase Hosting + Functions config
+├── firestore.rules                       # Firestore security rules
+├── .firebaserc                           # Firebase project alias
+└── .env.example                          # All required environment variables (copy to .env)
 ```
 
 ---
 
-# Tech Stack
+## Tech Stack
 
-## Frontend
-- HTML5
-- CSS3
-- JavaScript
-
-## Backend
-- Python
-- FastAPI
-- Uvicorn
-- Scikit-learn
-- Pandas
-- NumPy
-
-## Services & Integrations
-- Firebase
-- Cloudinary
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, vanilla JavaScript (module pattern) |
+| Backend | Python 3, FastAPI, Uvicorn |
+| ML | Scikit-learn (Random Forest), Pandas, NumPy |
+| Auth & DB | Firebase Authentication, Firestore |
+| Hosting | Firebase Hosting (frontend), Render / Railway / AWS (backend) |
+| Media | Cloudinary (avatar uploads) |
+| Cloud Functions | Node 18, Firebase Functions v4 |
+| Rate Limiting | SlowAPI |
+| Image Generation | Stable Diffusion XL (optional, Colab/GPU only) |
 
 ---
 
-# Installation & Setup
+## Installation & Setup
 
-## 1. Clone the Repository
+### 1. Clone the Repository
 
 ```bash
 git clone <your-repository-url>
 cd Beaulix
 ```
 
----
-
-## 2. Backend Setup
-
-Navigate to the backend folder:
+### 2. Backend Setup
 
 ```bash
 cd backend
-```
-
-Create a virtual environment:
-
-### Windows
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-### macOS/Linux
-```bash
 python3 -m venv venv
-source venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
+source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Run the backend server:
+Copy and fill in environment variables:
 
 ```bash
-python server.py
+cp ../.env.example .env
+# Edit .env — at minimum set BEAULIX_API_KEY and BEAULIX_FRONTEND_URL
 ```
 
-or
+Start the server:
 
 ```bash
+bash start.sh
+# or directly:
 uvicorn server:app --reload
 ```
 
-Backend runs at:
+Backend runs at `http://127.0.0.1:8000`.
+
+> **Note:** On first start the server loads `beaulix_combinatorial_predictions.xlsx` (~14 MB) and trains three Random Forest models. This takes 30–90 seconds. The port binds immediately; requests during this window receive HTTP 503.
+
+### 3. Frontend Setup
+
+Serve the `frontend/` directory with any static server:
 
 ```bash
-http://127.0.0.1:8000
+# Python
+python -m http.server 5500 --directory frontend
+
+# VS Code: use the Live Server extension
+```
+
+Open `http://127.0.0.1:5500`.
+
+### 4. Firebase Setup
+
+1. Create a Firebase project and enable Authentication and Firestore.
+2. Add your Firebase config to `frontend/firebase-config.js`.
+3. Deploy Cloud Functions:
+   ```bash
+   cd functions
+   npm install
+   firebase deploy --only functions
+   ```
+4. Deploy the frontend:
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+### 5. Running Tests
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
 ```
 
 ---
 
-## 3. Frontend Setup
+## Environment Variables
 
-Open the `frontend` folder.
+All variables are documented in `.env.example`. Required variables for production:
 
-You can run the frontend using:
-
-### VS Code Live Server
-OR
-
-### Python HTTP Server
-
-```bash
-python -m http.server 5500
-```
-
-Then open:
-
-```bash
-http://127.0.0.1:5500/frontend
-```
+| Variable | Required | Description |
+|---|---|---|
+| `BEAULIX_API_KEY` | **Yes (prod)** | Shared secret sent as `X-Beaulix-API-Key` header. Server refuses to start in production without it. |
+| `BEAULIX_FRONTEND_URL` | **Yes (prod)** | Exact Firebase Hosting URL for CORS allow-list. |
+| `BEAULIX_ENV` | No | `production` / `development` / `staging` / `test`. Defaults to dev mode. |
+| `CLOUDINARY_CLOUD_NAME` | For uploads | From Firebase Secrets / Cloudinary dashboard. |
+| `CLOUDINARY_API_KEY` | For uploads | From Firebase Secrets. |
+| `CLOUDINARY_API_SECRET` | For uploads | From Firebase Secrets. |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | For Firebase Admin | Full JSON content of the Admin SDK key. Never commit as a file. |
+| `MANAGED_DEPLOY` | Managed hosts | Set to `1` on Render / Railway / Fly.io. **Required** — without it health checks see the shell script, not uvicorn. |
+| `BEAULIX_MUSIC_DIR` | Colab only | Directory for audio assets. Defaults to `/content`. |
 
 ---
 
-# Environment Variables
+## API Reference
 
-Create a `.env` file based on `.env.example`.
+All prediction endpoints require the header `X-Beaulix-API-Key: <your_key>`.  
+Rate limit: **30 requests/minute** per IP.
 
-Example:
+### `GET /health`
+Returns server status and model load state. No auth required.
 
-```env
-BEAULIX_ENV=development
-BEAULIX_FRONTEND_URL=http://127.0.0.1:5500
-```
+### `GET /`
+Root health check. No auth required.
 
-Add Firebase and Cloudinary credentials where required.
+### `POST /predict`
+Step 1 — baseline prediction.
 
----
-
-# API Overview
-
-## Main Recommendation Endpoint
-
-```http
-POST /predict
-```
-
-Requires header: `X-Beaulix-API-Key: <your_key>`
-
-### Example Request
-
+**Request body:**
 ```json
 {
   "product_category": "skincare",
@@ -246,8 +266,19 @@ Requires header: `X-Beaulix-API-Key: <your_key>`
 }
 ```
 
-### Example Response
+Valid values:
 
+| Field | Valid values |
+|---|---|
+| `product_category` | `skincare` `makeup` `haircare` `fragrance` `bodycare` |
+| `funnel_stage` | `awareness` `consideration` `conversion` `retention` |
+| `age_range` | `13-17` `18-24` `25-34` `35-44` `45-60` `60+` |
+| `gender` | `female` `male` `non-binary` `all-genders` |
+| `occasion` | `daily` `wedding` `party` `gym` `vacation` `work` `selfcare` (optional) |
+| `decision_attribute_1` | Skin type: `oily` `dry` `combination` `normal` `sensitive` `mature` or benefit: `moisturising` `anti-aging` `brightening` `acne-control` |
+| `decision_attribute_2` | Product attribute (varies by category; see `constants.py`) |
+
+**Response:**
 ```json
 {
   "success": true,
@@ -257,69 +288,116 @@ Requires header: `X-Beaulix-API-Key: <your_key>`
   "confidence_score": 89.5,
   "similar_profiles": 1632,
   "benchmarks": { "ctr": 1.892, "conversion": 1.168, "engagement": 4.015 },
-  "ad_copy": { "hook": "...", "headline": "...", "description": "...", "cta": "...", "offer": "..." },
-  "targeting": { "targeting": [...], "platforms": [...], "tone": "..." },
-  "visual_recommendations": { "VISUAL_SHOT": "...", "LIGHTING": "...", ... },
-  "step2_recommendations": { "recommended_brand_style": "...", ... }
+  "ad_copy": {
+    "hook": "...",
+    "headline": "...",
+    "description": "...",
+    "cta": "...",
+    "offer": "..."
+  },
+  "targeting": {
+    "targeting": [...],
+    "platforms": [...],
+    "tone": "..."
+  },
+  "visual_recommendations": {
+    "VISUAL_SHOT": "...",
+    "LIGHTING": "...",
+    "COLOR_PALETTE": "...",
+    "STYLING": "..."
+  },
+  "step2_recommendations": {
+    "recommended_brand_style": "...",
+    "recommended_aspect_ratio": "...",
+    "recommended_output_type": "..."
+  }
 }
+```
+
+### `POST /predict-step2`
+Step 2 — re-predicts after creative choices are made. Extends the Step 1 body with:
+
+```json
+{
+  "...all Step 1 fields...",
+  "brand_style": "luxury-elegant",
+  "aspect_ratio": "1:1",
+  "output_type": "image"
+}
+```
+
+Returns Step 1 baseline, Step 2 updated scores, absolute delta, and percentage change for the frontend improvement banner.
+
+### `GET /visual-recommendations`
+Returns visual brief data filtered by query parameters. Accepts the same fields as `PredictionRequest` as query params.
+
+### `POST /step2-recommendations`
+Returns Step 2 creative recommendations (brand styles, aspect ratios, output types) for a given profile.
+
+### `GET /dataset-stats`
+Returns row count, column names, and category distribution from the training dataset.
+
+---
+
+## Deployment
+
+### Backend
+
+**Minimum spec: 2 vCPUs, 4 GB RAM.**  
+The server retrains three Random Forest models in a background thread on each new prediction. On single-core or memory-constrained instances, retraining will peg CPU and may degrade prediction latency under sustained load. Consider Celery/RQ for async retraining at scale.
+
+Supported platforms: Render, Railway, AWS, Azure, Google Cloud.
+
+**⚠️ Managed platforms (Render, Railway, Fly.io): always set `MANAGED_DEPLOY=1`.**  
+Without it, the platform health-checks see the shell script wrapper, not uvicorn — zero-downtime deploys and restart policies will behave incorrectly.
+
+```bash
+# Render / Railway: add to environment variables
+MANAGED_DEPLOY=1
+```
+
+For VPS deployments, prefer systemd or supervisord over `start.sh`.
+
+### Frontend
+
+Deploy the `frontend/` directory to Firebase Hosting, Netlify, or Vercel:
+
+```bash
+firebase deploy --only hosting
 ```
 
 ---
 
-# Deployment
+## Security Features
 
-## Backend
-
-**Minimum recommended spec: 2 vCPUs, 4 GB RAM.**
-The server retrains 3 Random Forest models (97,920 + N rows) in a background thread on new predictions. On a single-core or memory-constrained instance (e.g. t2.micro / free tier), retrains will peg CPU and may degrade prediction latency under sustained load. Consider moving retraining to an async job queue (Celery/RQ) if latency becomes an issue.
-
-You can deploy the backend using:
-- Render
-- Railway
-- AWS
-- Azure
-- Google Cloud
-
-> **⚠️ Managed platforms (Render, Railway, Fly.io): you MUST set `MANAGED_DEPLOY=1`**
-> in your platform's environment variables before deploying. Without it, the platform
-> sees `start.sh` as the running process (not uvicorn), health checks pass even when
-> the server has crashed, and zero-downtime deploys behave incorrectly. This setting
-> is **not optional** on managed hosts.
-
-## Frontend
-You can deploy the frontend using:
-- Firebase Hosting
-- Netlify
-- Vercel
+- API key authentication on all prediction endpoints (`X-Beaulix-API-Key` header)
+- Rate limiting via SlowAPI (30 req/min per IP)
+- CORS restricted to `BEAULIX_FRONTEND_URL` in production
+- Input validation allowlists on all prediction fields (prevents dataset poisoning)
+- Separate thread pools for inference and retraining (inference never starved)
+- Firebase Admin SDK key never stored in repo — env var only
+- ML API key managed via Firebase Secrets, never sent to browser
 
 ---
 
-# Security Features
-
-- API rate limiting using SlowAPI
-- Environment-based configuration
-- CORS protection
-- Secure API key handling support
-
----
-
-# Future Improvements
+## Future Improvements
 
 - User dashboard analytics
 - AI-generated beauty reports
 - Product recommendation marketplace
 - Social media sharing
-- Mobile app support
+- Mobile app
 - Advanced AI personalization
+- Async retraining via job queue (Celery/RQ)
 
 ---
 
-# Contributors
+## Contributors
 
 Developed as part of the Beaulix project.
 
 ---
 
-# License
+## License
 
 This project is intended for educational and development purposes.
