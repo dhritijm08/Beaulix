@@ -176,7 +176,13 @@ exports.getGpuUrl = onCall(
       throw new HttpsError("unauthenticated", "Must be signed in to fetch GPU URL.");
     }
     const url = _beaulixGpuUrl.value();
-    if (!url) throw new HttpsError("not-found", "BEAULIX_GPU_URL secret is not set.");
+    // "failed-precondition" is the correct HttpsError code for a missing config —
+    // "not-found" is not a valid gRPC/HttpsError status and causes an unhandled
+    // exception that surfaces as a generic "internal" error on the client.
+    if (!url) {
+      logger.error("BEAULIX_GPU_URL secret is not set. Run: firebase functions:secrets:set BEAULIX_GPU_URL");
+      throw new HttpsError("failed-precondition", "GPU URL is not configured. Set the BEAULIX_GPU_URL secret.");
+    }
     return {url};
   },
 );

@@ -43,14 +43,13 @@
   const _error = console.error.bind(console);
   console.error = function (...args) {
     const msg = args.map(a => (typeof a === 'string' ? a : String(a))).join(' ');
-    // Suppress the CORS/CSP preflight error for getGpuUrl that fires before
-    // the user is authenticated — the generator-init.js catch() block handles
-    // this gracefully and shows "GPU: Offline" in the UI.
+    // Suppress only the browser-level CORS/network errors that fire before the
+    // user is authenticated (benign race on page load). Do NOT suppress function
+    // errors like "internal" or "failed-precondition" — those indicate real
+    // problems (e.g. missing BEAULIX_GPU_URL secret) that need to be visible.
     if (
-      msg.includes('getGpuUrl') ||
       msg.includes('Access-Control-Allow-Origin') ||
       msg.includes('ERR_FAILED') ||
-      msg.includes('Failed to fetch') ||
       (msg.includes('Content Security Policy') && msg.includes('beaulix.onrender.com'))
     ) {
       return;
