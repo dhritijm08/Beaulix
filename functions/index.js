@@ -4,6 +4,7 @@ const {defineSecret} = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const https = require("https");
 const http = require("http");
+const corsLib = require("cors");
 
 // ── Firebase Admin — initialised once at module load ─────────────────────────
 const {initializeApp, getApps} = require("firebase-admin/app");
@@ -165,31 +166,36 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  * Update it after each Colab restart:
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
+// Build a cors middleware instance once so it is reused across warm invocations.
+// Using the `cors` npm package is the only reliable way to handle OPTIONS
+// preflight in Firebase Functions v7 onRequest handlers — the built-in `cors`
+// option no longer guarantees preflight responses include the required headers.
+const _gpuUrlCors = corsLib({
+  origin: ALLOWED_ORIGINS,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+});
+
 exports.getGpuUrl = onRequest(
-  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: ALLOWED_ORIGINS},
-  async (req, res) => {
-    // CORS: handle preflight and set headers on all responses
-    const origin = req.headers.origin || "";
-    const allowedOrigin = ALLOWED_ORIGINS
-      ? (ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0])
-      : (origin || "*");
-    res.set("Access-Control-Allow-Origin", allowedOrigin);
-    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+  // Pass cors: false so the framework does NOT intercept preflight before our
+  // middleware runs — the corsLib instance above owns the full CORS lifecycle.
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: false},
+  (req, res) => {
+    _gpuUrlCors(req, res, async () => {
+      // Auth: verify Firebase ID token
+      try {
+        await _verifyFirebaseToken(req.headers.authorization || "");
+      } catch (err) {
+        res.status(401).json({error: err.message});
+        return;
+      }
 
-    // Auth: verify Firebase ID token
-    try {
-      await _verifyFirebaseToken(req.headers.authorization || "");
-    } catch (err) {
-      res.status(401).json({error: err.message});
-      return;
-    }
-
-    // Return GPU URL from secret
-    const url = _beaulixGpuUrl.value();
-    if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
-    res.status(200).json({url});
+      // Return GPU URL from secret
+      const url = _beaulixGpuUrl.value();
+      if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
+      res.status(200).json({url});
+    });
   },
 );
 
