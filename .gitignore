@@ -12,10 +12,15 @@ firebase-debug.*.log*
 firebase.json
 firebase-config.js
 
-# Firebase service account keys (DO NOT COMMIT)
+# Firebase service account keys 
 beaulix-model-1fca694b7855.json
 beaulix-model-*.json
 *-firebase-adminsdk-*.json
+
+# Firebase service account keys — never commit these
+*adminsdk*.json
+*service-account*.json
+beaulix-model-*.json
 
 # Uncomment if each developer uses a different Firebase project
 # .firebaserc
