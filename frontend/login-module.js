@@ -119,9 +119,12 @@
     const originalHTML = googleBtn.innerHTML;
     googleBtn.textContent = 'Signing in...';
     googleBtn.disabled = true;
-    await handleGoogleLogin();
-    googleBtn.innerHTML = originalHTML;
-    googleBtn.disabled = false;
+    try {
+      await handleGoogleLogin();
+    } finally {
+      googleBtn.innerHTML = originalHTML;
+      googleBtn.disabled = false;
+    }
   });
 
   // ── Auth state check ──────────────────────────────────────

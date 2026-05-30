@@ -11,6 +11,7 @@
 //
 // See: https://firebase.google.com/docs/hosting/reserved-urls
 
+import './suppress-firebase-warn.js';
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 
 async function loadFirebaseConfig() {
