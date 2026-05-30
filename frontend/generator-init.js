@@ -1,18 +1,34 @@
     const ML_API_BASE = "https://beaulix.onrender.com";
     window._ML_API_BASE = ML_API_BASE;
-    // NOTE: BEAULIX_API_KEY must NOT be set here — keep it server-side via
-    // Firebase Functions (functions/index.js). Setting it in the browser exposes
-    // it in DevTools to any visitor. The Functions proxy injects it automatically.
     const FETCH_TIMEOUT = 300000;
     const VIDEO_LOAD_TIMEOUT = 180000;
-    // API key is server-side only — read from window in case a trusted server-render sets it.
-    const _mlApiKey = window.BEAULIX_API_KEY || '';
-    const ML_HEADERS = Object.assign(
-      { 'Content-Type': 'application/json' },
-      _mlApiKey ? { 'X-Beaulix-API-Key': _mlApiKey } : {}
-    );
-    window._ML_HEADERS = ML_HEADERS;
     const DEBUG = false; // set true locally to enable verbose console output
+
+    // BEAULIX_API_KEY is stored in Firestore (config/apiKey) so it never lives
+    // in source code or DevTools. Colab / your deploy script writes it once:
+    //   db.collection("config").document("apiKey").set({"key": "<your-key>"})
+    // Firestore rules only allow authenticated users to read it.
+    let ML_HEADERS = { 'Content-Type': 'application/json' };
+    window._ML_HEADERS = ML_HEADERS; // updated once apiKey loads below
+    (async () => {
+      try {
+        const { app } = await import('./firebase-config.js');
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const user = await new Promise(resolve => {
+          const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
+        });
+        if (!user) throw new Error('Not signed in');
+        const db = getFirestore(app);
+        const keySnap = await getDoc(doc(db, 'config', 'apiKey'));
+        if (keySnap.exists() && keySnap.data().key) {
+          ML_HEADERS = { 'Content-Type': 'application/json', 'X-Beaulix-API-Key': keySnap.data().key };
+          window._ML_HEADERS = ML_HEADERS;
+        }
+      } catch (e) {
+        console.warn('Could not load API key from Firestore:', e.message);
+      }
+    })();
 
     // GPU_API_BASE is read from Firestore (free Spark plan — no Cloud Function needed).
     // Colab writes config/gpu.url after the ngrok tunnel starts (see sdxl_model.py).
