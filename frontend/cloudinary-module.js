@@ -9,22 +9,19 @@
  *   // then call window.saveToHistory(fileUrl, payload) as before
  */
 
-import { getFirestore, collection, addDoc, serverTimestamp }
+import { getFirestore, collection, addDoc, serverTimestamp, getDoc, doc }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-// Cloudinary credentials are fetched at runtime from the cloudinaryConfig
-// Firebase Function so they are never hardcoded in static source.
-// cloudinary-config.js has been removed.
+// Cloudinary credentials are read from Firestore config/cloudinary (no Cloud Functions needed).
 let CLOUDINARY_CLOUD = null;
 let CLOUDINARY_PRESET = null;
 async function _ensureCloudinaryConfig() {
   if (CLOUDINARY_CLOUD && CLOUDINARY_PRESET) return;
-  const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
   const { app } = await import('./firebase-config.js');
-  const fns = getFunctions(app);
-  const cloudinaryConfig = httpsCallable(fns, 'cloudinaryConfig');
-  const result = await cloudinaryConfig();
-  CLOUDINARY_CLOUD = result.data.cloud;
-  CLOUDINARY_PRESET = result.data.preset;
+  const db = getFirestore(app);
+  const snap = await getDoc(doc(db, 'config', 'cloudinary'));
+  if (!snap.exists()) throw new Error('config/cloudinary doc missing in Firestore');
+  CLOUDINARY_CLOUD  = snap.data().cloud_name;
+  CLOUDINARY_PRESET = snap.data().upload_preset;
 }
 
 async function uploadToCloudinary(blob, isVideo, debug) {
