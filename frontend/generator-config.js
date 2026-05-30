@@ -6,15 +6,28 @@
     let GPU_API_BASE = null;
     (async () => {
       try {
-        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
+        // getGpuUrl is deployed as onRequest (not onCall), so we must call it
+        // as a plain HTTP request — not via httpsCallable — to avoid the CORS
+        // preflight mismatch that caused "No 'Access-Control-Allow-Origin' header".
+        // We attach the Firebase ID token in the Authorization header so the
+        // server-side _verifyFirebaseToken() check passes.
+        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
         const { app } = await import('./firebase-config.js');
-        const fns = getFunctions(app);
-        const getGpuUrl = httpsCallable(fns, 'getGpuUrl');
-        const result = await getGpuUrl();
-        GPU_API_BASE = result.data.url;
+        const auth = getAuth(app);
+        const user = auth.currentUser;
+        const idToken = user ? await user.getIdToken() : null;
+        const headers = { 'Content-Type': 'application/json' };
+        if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+        const res = await fetch(
+          'https://us-central1-beaulix-model.cloudfunctions.net/getGpuUrl',
+          { method: 'GET', headers }
+        );
+        if (!res.ok) throw new Error(`getGpuUrl returned ${res.status}`);
+        const data = await res.json();
+        GPU_API_BASE = data.url;
         window._GPU_API_BASE = GPU_API_BASE;
       } catch (e) {
-        console.error('Failed to fetch GPU URL from getGpuUrl Function:', e);
+        console.error('Could not fetch GPU URL from Firebase Function:', e);
       }
     })();
     const FETCH_TIMEOUT = 300000;
