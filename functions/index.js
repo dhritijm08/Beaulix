@@ -83,7 +83,8 @@ const _cloudinaryUploadPreset = defineSecret("CLOUDINARY_UPLOAD_PRESET");
  * are returned.  The API key and secret never leave the Functions runtime.
  */
 exports.cloudinaryConfig = onCall(
-  {secrets: [_cloudinaryCloudName, _cloudinaryUploadPreset], cors: ALLOWED_ORIGINS || true},
+  // cors: true is safe — request.auth is enforced inside the handler.
+  {secrets: [_cloudinaryCloudName, _cloudinaryUploadPreset], cors: true},
   async (request) => {
     // Require the caller to be authenticated — prevents anonymous enumeration.
     if (!request.auth) {
@@ -168,7 +169,12 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
 exports.getGpuUrl = onCall(
-  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: ALLOWED_ORIGINS},
+  // cors: true is safe here because request.auth is enforced below —
+  // unauthenticated callers are rejected before the secret is read.
+  // A strict origin allowlist on onCall v2 can silently fail preflight
+  // when the Cloud Run URL differs from the cloudfunctions.net URL that
+  // httpsCallable() constructs, causing the CORS error seen in production.
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: true},
   async (request) => {
     // onCall populates request.auth automatically from the Firebase ID token
     // sent by the client SDK — no manual token parsing needed.
@@ -267,7 +273,8 @@ exports.mlPredictStep2 = _createMlProxy("/predict-step2", "mlPredictStep2");
 //   • profile.html (lines 375-383) when a user replaces their avatar, to clean up the old asset.
 // Do NOT remove this function — it is actively wired up in both frontend pages.
 exports.deleteCloudinaryAsset = onCall(
-  { secrets: [_cloudinaryCloudName, _cloudinaryApiKey, _cloudinaryApiSecret], cors: ALLOWED_ORIGINS || true },
+  // cors: true is safe — request.auth is enforced inside the handler.
+  { secrets: [_cloudinaryCloudName, _cloudinaryApiKey, _cloudinaryApiSecret], cors: true },
   async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
