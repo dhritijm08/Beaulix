@@ -20,23 +20,19 @@
     let GPU_API_BASE = null;
     (async () => {
       try {
-        // Call getGpuUrl directly on cloudfunctions.net.
-        // The function is an onRequest handler with explicit CORS headers that
-        // allow requests from beaulix-model.web.app and firebaseapp.com origins.
+        // getGpuUrl is an onCall function — must be called via httpsCallable.
+        // onCall handles CORS preflight automatically; no manual fetch needed.
         const { app } = await import('./firebase-config.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        // Wait for auth state before calling — onCall rejects unauthenticated callers.
         const user = await new Promise(resolve => {
           const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
         });
         if (!user) throw new Error('Not signed in');
-        const idToken = await user.getIdToken();
-        const resp = await fetch(
-          'https://us-central1-beaulix-model.cloudfunctions.net/getGpuUrl',
-          { headers: { 'Authorization': `Bearer ${idToken}` } }
-        );
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        GPU_API_BASE = data.url;
+        const fns = getFunctions(app);
+        const result = await httpsCallable(fns, 'getGpuUrl')();
+        GPU_API_BASE = result.data.url;
         window._GPU_API_BASE = GPU_API_BASE;
         checkGPUConnection();
       } catch (e) {

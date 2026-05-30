@@ -155,42 +155,29 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  * frontend so the URL is never hardcoded in static HTML and automatically updates
  * when the Colab session restarts and generates a new ngrok URL.
  *
- * Implemented as onRequest (not onCall) so CORS preflight is handled reliably.
- * The firebase-functions v2 onCall cors option has a known issue where it does
- * not add Access-Control-Allow-Origin on OPTIONS preflight responses in some
- * configurations. onRequest with manual CORS headers is the guaranteed fix.
+ * Implemented as onCall so Firebase handles CORS preflight automatically and
+ * reliably — onCall always sets the correct Access-Control-Allow-Origin header
+ * regardless of firebase-functions version. The caller must be authenticated
+ * (request.auth is checked); no separate token verification needed.
+ *
+ * Frontend calls this with httpsCallable() — see generator-init.js.
  *
  * Deploy the secret once:
  *   firebase functions:secrets:set BEAULIX_GPU_URL   # e.g. https://abc123.ngrok.io
  * Update it after each Colab restart:
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
-exports.getGpuUrl = onRequest(
-  // cors: true lets the Firebase Functions v7 framework handle OPTIONS preflight
-  // automatically — this is the only option guaranteed to work in all v7 configs.
-  // Origin restriction is enforced inside the handler (see below) so unauthorised
-  // origins get a 403 on non-preflight requests even though preflight is open.
-  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: true},
-  async (req, res) => {
-    // Reject non-allowed origins on actual requests (preflight is handled above).
-    const origin = req.headers.origin || "";
-    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-      res.status(403).json({error: "Origin not allowed."});
-      return;
+exports.getGpuUrl = onCall(
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10, cors: ALLOWED_ORIGINS},
+  async (request) => {
+    // onCall populates request.auth automatically from the Firebase ID token
+    // sent by the client SDK — no manual token parsing needed.
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Must be signed in to fetch GPU URL.");
     }
-
-    // Auth: verify Firebase ID token
-    try {
-      await _verifyFirebaseToken(req.headers.authorization || "");
-    } catch (err) {
-      res.status(401).json({error: err.message});
-      return;
-    }
-
-    // Return GPU URL from secret
     const url = _beaulixGpuUrl.value();
-    if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
-    res.status(200).json({url});
+    if (!url) throw new HttpsError("not-found", "BEAULIX_GPU_URL secret is not set.");
+    return {url};
   },
 );
 
