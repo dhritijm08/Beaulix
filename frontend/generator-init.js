@@ -1,14 +1,19 @@
     const ML_API_BASE = "https://beaulix.onrender.com";
-    window._ML_API_BASE = ML_API_BASE;
     const FETCH_TIMEOUT = 300000;
     const VIDEO_LOAD_TIMEOUT = 180000;
     const DEBUG = false; // set true locally to enable verbose console output
 
-    // Load API key + GPU URL from Firestore in one batched read.
-    // Both docs are in the config collection — one round trip.
-    // ML_HEADERS starts empty; the Analyze button is disabled until the key loads.
-    let ML_HEADERS = { 'Content-Type': 'application/json' };
-    window._ML_HEADERS = ML_HEADERS;
+    // Single config namespace — avoids polluting window with individual globals.
+    // Modules that need these values read from window.BEAULIX_CONFIG.
+    window.BEAULIX_CONFIG = {
+      ML_API_BASE,
+      ML_HEADERS: { 'Content-Type': 'application/json' },
+      GPU_API_BASE: null,
+      NGROK_HEADERS: { 'ngrok-skip-browser-warning': 'true', 'User-Agent': 'Mozilla/5.0 (compatible; Beaulix/1.0)' },
+    };
+
+    // Local aliases for use within this script.
+    let ML_HEADERS = window.BEAULIX_CONFIG.ML_HEADERS;
     let GPU_API_BASE = null;
 
     // Disable Analyze button immediately; re-enable once apiKey is confirmed loaded.
@@ -22,7 +27,7 @@
       try {
         const { app } = await import('./firebase-config.js');
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { getFirestore, doc, getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const { getFirestore, doc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
 
         // Wait for auth state once, reuse for both reads.
         const user = await new Promise(resolve => {
@@ -42,7 +47,7 @@
         // API key
         if (keySnap.exists() && keySnap.data().key) {
           ML_HEADERS = { 'Content-Type': 'application/json', 'X-Beaulix-API-Key': keySnap.data().key };
-          window._ML_HEADERS = ML_HEADERS;
+          window.BEAULIX_CONFIG.ML_HEADERS = ML_HEADERS;
         } else {
           console.warn('config/apiKey missing or empty in Firestore.');
         }
@@ -50,7 +55,7 @@
         // GPU URL
         if (gpuSnap.exists() && gpuSnap.data().url) {
           GPU_API_BASE = gpuSnap.data().url;
-          window._GPU_API_BASE = GPU_API_BASE;
+          window.BEAULIX_CONFIG.GPU_API_BASE = GPU_API_BASE;
           checkGPUConnection();
         } else {
           console.warn('config/gpu missing — run Colab first.');
@@ -70,18 +75,20 @@
       }
     })();
 
-    // Single source of truth for ngrok bypass headers — used by both inline
-    // fetches (via fetchWithTimeout) and the Cloudinary module (ngrokHeaders option).
-    const NGROK_HEADERS = { 'ngrok-skip-browser-warning': 'true', 'User-Agent': 'Mozilla/5.0 (compatible; Beaulix/1.0)' };
-    // Expose on window so <script type="module"> blocks can access it (modules have isolated scope)
-    window.NGROK_HEADERS = NGROK_HEADERS;
+    // NGROK_HEADERS: only sent to ngrok (Colab/GPU) URLs, never to production Firebase Functions.
+    // Accessible via window.BEAULIX_CONFIG.NGROK_HEADERS for module scripts.
+    const NGROK_HEADERS = window.BEAULIX_CONFIG.NGROK_HEADERS;
 
     async function fetchWithTimeout(resource, options = {}) {
       const { timeout = FETCH_TIMEOUT } = options;
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), timeout);
       try {
-        const response = await fetch(resource, { ...options, signal: controller.signal, headers: { ...NGROK_HEADERS, ...options.headers } });
+        // Only attach ngrok bypass headers when the target URL is a ngrok tunnel.
+        // Never send them to production Firebase Functions or the ML backend.
+        const isNgrok = typeof resource === 'string' && resource.includes('ngrok');
+        const baseHeaders = isNgrok ? NGROK_HEADERS : {};
+        const response = await fetch(resource, { ...options, signal: controller.signal, headers: { ...baseHeaders, ...options.headers } });
         clearTimeout(id); return response;
       } catch (error) {
         clearTimeout(id);

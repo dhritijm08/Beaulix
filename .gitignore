@@ -12,15 +12,13 @@ firebase-debug.*.log*
 firebase.json
 firebase-config.js
 
-# Firebase service account keys 
-beaulix-model-1fca694b7855.json
+# Firebase service account keys — NEVER commit these
+# These grant admin access to the Firebase project.
+# Rotate immediately at: https://console.cloud.google.com/iam-admin/serviceaccounts
 beaulix-model-*.json
-*-firebase-adminsdk-*.json
-
-# Firebase service account keys — never commit these
 *adminsdk*.json
 *service-account*.json
-beaulix-model-*.json
+*-firebase-adminsdk-*.json
 
 # Uncomment if each developer uses a different Firebase project
 # .firebaserc
@@ -71,7 +69,9 @@ __pycache__/
 *$py.class
 
 # Training data and model artifacts
+# Downloaded at build time via backend/download_data.py
 backend/*.xlsx
+backend/dataset.csv
 backend/models/*.pkl
 
 # IDE files

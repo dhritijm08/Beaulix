@@ -12,8 +12,3 @@ pydantic==2.11.0
 # needed for background retraining. Do not remove it — retraining reads Excel directly.
 openpyxl==3.1.2
 slowapi==0.1.9
-
-# ── Testing ────────────────────────────────────────────────────────────
-pytest==8.3.3
-pytest-mock==3.14.0
-httpx==0.28.1   # required by FastAPI's TestClient (starlette)

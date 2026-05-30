@@ -27,15 +27,15 @@
     initCloudinaryModule({
       app,
       currentUserIdRef,
-      ngrokHeaders: window.NGROK_HEADERS,
+      ngrokHeaders: window.BEAULIX_CONFIG?.NGROK_HEADERS,
       debug: typeof DEBUG !== 'undefined' && DEBUG,
     });
 
     // Registers window.onStep2SelectionChange and window.renderImprovementBanner
     // These bridge into the classic <script> block via window globals.
     const { onStep2SelectionChange } = initStep2Module({
-      mlApiBase:            window._ML_API_BASE,
-      mlHeaders:            window._ML_HEADERS,
+      mlApiBase:            window.BEAULIX_CONFIG?.ML_API_BASE,
+      mlHeaders:            window.BEAULIX_CONFIG?.ML_HEADERS,
       buildStep2Payload:    () => window._buildStep2Payload?.(),
       getLastPredictionData: () => window._lastPredictionData,
       setStep2PredictionData: d => { window._step2PredictionData = d; },
