@@ -616,7 +616,7 @@
     }
 
     async function runStagedLoading() {
-      loadingStages.style.display = 'block';
+      loadingStages.classList.remove('hidden'); loadingStages.style.display = 'block';
       const stages = ['stage1','stage2','stage3','stage4'];
       const indicators = ['indicator1','indicator2','indicator3','indicator4'];
       stages.forEach(id => document.getElementById(id).classList.remove('active','completed'));
@@ -932,9 +932,9 @@
     }
 
     async function runGeneration(payload) {
-      generateCreativeSpinner.style.display = 'block';
+      generateCreativeSpinner.classList.remove('hidden'); generateCreativeSpinner.style.display = 'block';
       generateCreativeBtn.disabled = true;
-      generationProgress.style.display = 'block';
+      generationProgress.classList.remove('hidden'); generationProgress.style.display = 'block';
       progressBar.style.width = '0%';
       let progress = 0;
       const interval = setInterval(() => { progress += 2; if (progress <= 90) progressBar.style.width = progress + '%'; }, 500);
@@ -963,7 +963,7 @@
         updateVisualContent(payload._productType || '');
 
         previewBox.style.display = 'none';
-        generatedOutput.style.display = 'flex';
+        generatedOutput.classList.remove('hidden'); generatedOutput.style.display = 'flex';
 
         // Delegate banner rendering to step2-module.js
         window.renderImprovementBanner?.({
@@ -980,10 +980,10 @@
         showToast(`Error: ${error.message}`, 'error');
         visualContent.innerHTML = `<div class="image-error-box"><div class="error-icon">⚠️</div><p>${error.message}</p><small>Check that your Colab notebook is still running</small><button class="retry-btn" id="retryGenBtn">Retry</button></div>`;
         document.getElementById('retryGenBtn')?.addEventListener('click', () => runGeneration(payload));
-        previewBox.style.display = 'none'; generatedOutput.style.display = 'flex'; downloadBtn.disabled = true;
+        previewBox.style.display = 'none'; generatedOutput.classList.remove('hidden'); generatedOutput.style.display = 'flex'; downloadBtn.disabled = true;
       } finally {
-        generateCreativeSpinner.style.display = 'none'; generateCreativeBtn.disabled = false;
-        generationProgress.style.display = 'none'; progressBar.style.width = '0%';
+        generateCreativeSpinner.classList.add('hidden'); generateCreativeSpinner.style.display = 'none'; generateCreativeBtn.disabled = false;
+        generationProgress.classList.add('hidden'); generationProgress.style.display = 'none'; progressBar.style.width = '0%';
         updateGenerateButtonState();
       }
     }
@@ -1020,7 +1020,7 @@
       brandStyleSelect.addEventListener('change', () => { updateGenerateButtonState(); onStep2SelectionChange(); });
       durationSelect.addEventListener('change', updateGenerateButtonState);
       document.querySelectorAll('input[name="output-type"]').forEach(radio => {
-        radio.addEventListener('change', () => { document.getElementById('duration-group').style.display = radio.value==='video'?'block':'none'; updateGenerateButtonState(); onStep2SelectionChange(); });
+        radio.addEventListener('change', () => { const dg = document.getElementById('duration-group'); if(radio.value==='video'){dg.classList.remove('hidden');dg.style.display='block';}else{dg.classList.add('hidden');dg.style.display='none';}; updateGenerateButtonState(); onStep2SelectionChange(); });
       });
       document.querySelectorAll('input[name="aspect-ratio"]').forEach(radio => {
         radio.addEventListener('change', onStep2SelectionChange);
@@ -1030,10 +1030,10 @@
     });
 
     analyzeBtn.addEventListener('click', async function() {
-      improvementBanner.style.display = 'none';
+      improvementBanner.classList.add('hidden'); improvementBanner.style.display = 'none';
       step2PredictionData = null;
       if (!validateMarketingProfile()) { showToast('Please fill all required fields in Step 1','error'); return; }
-      loadingStages.style.display = 'block'; analysisResults.classList.add('hidden'); analysisResults.style.display = 'none'; analyzeBtn.disabled = true;
+      loadingStages.classList.remove('hidden'); loadingStages.style.display = 'block'; analysisResults.classList.add('hidden'); analysisResults.style.display = 'none'; analyzeBtn.disabled = true;
       analyzeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-spinner"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Analyzing...`;
       try {
         await runStagedLoading();
@@ -1055,7 +1055,7 @@
 
       } catch (error) { showToast(`Error: ${error.message}`,'error'); analysisResults.classList.add('hidden'); analysisResults.style.display='none'; }
       finally {
-        loadingStages.style.display='none'; analyzeBtn.disabled=false;
+        loadingStages.classList.add('hidden'); loadingStages.style.display='none'; analyzeBtn.disabled=false;
         analyzeBtn.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Analyze Marketing Profile <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         updateAnalyzeButtonState();
       }
