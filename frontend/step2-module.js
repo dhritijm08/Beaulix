@@ -119,7 +119,7 @@ export function renderImprovementBanner({
 
     document.querySelector('.improvement-title').textContent =
       hasLift ? 'Your creative choices improved performance! 🎯' : 'Your creative is performing well! ✨';
-    if (html) { improvementDetails.innerHTML = html; improvementBanner.style.display = 'flex'; }
+    if (html) { improvementDetails.innerHTML = html; improvementBanner.classList.remove('hidden'); improvementBanner.style.display = 'flex'; }
 
   } else if (lastPredictionData) {
     // Fallback: no step2 data — compare Step 1 result vs industry average
@@ -137,6 +137,6 @@ export function renderImprovementBanner({
       const c = ((lastPredictionData.engagement_rate - bench.engagement) / bench.engagement * 100).toFixed(0);
       html += `<span class="improvement-detail-item engagement">❤️ Engagement +${c}% vs avg</span>`;
     }
-    if (html) { improvementDetails.innerHTML = html; improvementBanner.style.display = 'flex'; }
+    if (html) { improvementDetails.innerHTML = html; improvementBanner.classList.remove('hidden'); improvementBanner.style.display = 'flex'; }
   }
 }
