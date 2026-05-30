@@ -15,9 +15,14 @@ if (!getApps().length) initializeApp();
 //   firebase functions:config:set app.frontend_url="https://your-app.web.app"
 // Falls back to false (no CORS) rather than wildcard if the variable is unset,
 // so a misconfigured deploy fails closed instead of open.
-const ALLOWED_ORIGINS = process.env.BEAULIX_FRONTEND_URL
-  ? [process.env.BEAULIX_FRONTEND_URL]
-  : false;
+// Known frontend origins. BEAULIX_FRONTEND_URL env var adds extras at runtime.
+// Hardcoding the production origin here ensures CORS works even without the
+// env var set, which was the cause of the header being missing on preflight.
+const ALLOWED_ORIGINS = [
+  "https://beaulix-model.web.app",
+  "https://beaulix-model.firebaseapp.com",
+  ...(process.env.BEAULIX_FRONTEND_URL ? [process.env.BEAULIX_FRONTEND_URL] : []),
+];
 
 /**
  * Verify a Firebase ID token from an Authorization: Bearer <token> header.
