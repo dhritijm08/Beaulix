@@ -150,22 +150,41 @@ function _forwardToBackend(backendUrl, path, apiKey, body) {
  * frontend so the URL is never hardcoded in static HTML and automatically updates
  * when the Colab session restarts and generates a new ngrok URL.
  *
+ * Implemented as onRequest (not onCall) so CORS preflight is handled reliably.
+ * The firebase-functions v2 onCall cors option has a known issue where it does
+ * not add Access-Control-Allow-Origin on OPTIONS preflight responses in some
+ * configurations. onRequest with manual CORS headers is the guaranteed fix.
+ *
  * Deploy the secret once:
  *   firebase functions:secrets:set BEAULIX_GPU_URL   # e.g. https://abc123.ngrok.io
  * Update it after each Colab restart:
  *   firebase functions:secrets:set BEAULIX_GPU_URL
  */
-exports.getGpuUrl = onCall(
-  {secrets: [_beaulixGpuUrl], cors: ALLOWED_ORIGINS || true},
-  async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Must be signed in to fetch GPU URL.");
+exports.getGpuUrl = onRequest(
+  {secrets: [_beaulixGpuUrl], timeoutSeconds: 10},
+  async (req, res) => {
+    // CORS: handle preflight and set headers on all responses
+    const origin = req.headers.origin || "";
+    const allowedOrigin = ALLOWED_ORIGINS
+      ? (ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0])
+      : (origin || "*");
+    res.set("Access-Control-Allow-Origin", allowedOrigin);
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+
+    // Auth: verify Firebase ID token
+    try {
+      await _verifyFirebaseToken(req.headers.authorization || "");
+    } catch (err) {
+      res.status(401).json({error: err.message});
+      return;
     }
+
+    // Return GPU URL from secret
     const url = _beaulixGpuUrl.value();
-    if (!url) {
-      throw new HttpsError("not-found", "BEAULIX_GPU_URL secret is not set.");
-    }
-    return {url};
+    if (!url) { res.status(404).json({error: "BEAULIX_GPU_URL secret is not set."}); return; }
+    res.status(200).json({url});
   },
 );
 
