@@ -494,19 +494,41 @@ tunnel = ngrok.connect(8000)
 public_url = tunnel.public_url
 print(f"✅ Tunnel live: {public_url}")
 
+# ── Publish GPU URL to Firestore (free Spark plan, no Cloud Functions needed) ──
+# Colab reads FIREBASE_SERVICE_ACCOUNT_JSON from Colab Secrets.
+# Get it from Firebase Console → Project Settings → Service Accounts → Generate new private key.
+try:
+    import firebase_admin
+    from firebase_admin import credentials, firestore as _firestore
+    _sa_json = _colab_userdata.get("FIREBASE_SERVICE_ACCOUNT_JSON") or ""
+    if _sa_json:
+        import json as _json
+        if not firebase_admin._apps:
+            _cred = credentials.Certificate(_json.loads(_sa_json))
+            firebase_admin.initialize_app(_cred)
+        _db = _firestore.client()
+        _db.collection("config").document("gpu").set({
+            "url": public_url,
+            "updated_at": _firestore.SERVER_TIMESTAMP,
+        })
+        print(f"✅ GPU URL published to Firestore: {public_url}")
+    else:
+        print("⚠️  FIREBASE_SERVICE_ACCOUNT_JSON not in Colab Secrets — skipping Firestore write.")
+        print(f"   Copy GPU URL manually: {public_url}")
+except Exception as _fserr:
+    print(f"⚠️  Firestore write failed: {_fserr}")
+    print(f"   Copy GPU URL manually: {public_url}")
+
 # ============================================================
 # STEP 11: Summary
 # ============================================================
 print("\n" + "="*60)
 print("🚀 SERVER READY!")
 print("="*60)
-print(f"\n📱 YOUR FRONTEND URL (already hardcoded — no action needed):")
-print(f"   {public_url}")
+print(f"\n📱 GPU URL published to Firestore — frontend picks it up automatically.")
 print(f"\n   Health:   {public_url}/health")
 print(f"   Generate: {public_url}/generate")
 print(f"   Files:    {public_url}/files")
-print(f"\n⚠️  Remember to update GPU_API_BASE in generator.html if the ngrok URL changed:")
-print(f'   const GPU_API_BASE = "{public_url}";')
 
 # ============================================================
 # STEP 12: Keep-alive monitor

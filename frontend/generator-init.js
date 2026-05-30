@@ -14,29 +14,29 @@
     window._ML_HEADERS = ML_HEADERS;
     const DEBUG = false; // set true locally to enable verbose console output
 
-    // GPU_API_BASE is fetched dynamically from the getGpuUrl Firebase Function
-    // so the URL never lives in source control and updates automatically when
-    // the Colab session restarts. See functions/index.js › exports.getGpuUrl.
+    // GPU_API_BASE is read from Firestore (free Spark plan — no Cloud Function needed).
+    // Colab writes config/gpu.url after the ngrok tunnel starts (see sdxl_model.py).
+    // Firestore security rules allow authenticated users to read config/gpu; only
+    // the service account (Colab) can write it.
     let GPU_API_BASE = null;
     (async () => {
       try {
-        // getGpuUrl is an onCall function — must be called via httpsCallable.
-        // onCall handles CORS preflight automatically; no manual fetch needed.
         const { app } = await import('./firebase-config.js');
-        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        // Wait for auth state before calling — onCall rejects unauthenticated callers.
+        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        // Wait for signed-in user before reading — Firestore rules require auth.
         const user = await new Promise(resolve => {
           const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
         });
         if (!user) throw new Error('Not signed in');
-        const fns = getFunctions(app);
-        const result = await httpsCallable(fns, 'getGpuUrl')();
-        GPU_API_BASE = result.data.url;
+        const db = getFirestore(app);
+        const snap = await getDoc(doc(db, 'config', 'gpu'));
+        if (!snap.exists()) throw new Error('config/gpu document not found — run Colab first');
+        GPU_API_BASE = snap.data().url;
         window._GPU_API_BASE = GPU_API_BASE;
         checkGPUConnection();
       } catch (e) {
-        console.warn('Could not fetch GPU URL from Firebase Function:', e.message);
+        console.warn('Could not load GPU URL from Firestore:', e.message);
         document.getElementById('gpuDotStatus').className = 'status-dot offline';
         document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
       }
