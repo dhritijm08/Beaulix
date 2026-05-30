@@ -4,57 +4,69 @@
     const VIDEO_LOAD_TIMEOUT = 180000;
     const DEBUG = false; // set true locally to enable verbose console output
 
-    // BEAULIX_API_KEY is stored in Firestore (config/apiKey) so it never lives
-    // in source code or DevTools. Colab / your deploy script writes it once:
-    //   db.collection("config").document("apiKey").set({"key": "<your-key>"})
-    // Firestore rules only allow authenticated users to read it.
+    // Load API key + GPU URL from Firestore in one batched read.
+    // Both docs are in the config collection — one round trip.
+    // ML_HEADERS starts empty; the Analyze button is disabled until the key loads.
     let ML_HEADERS = { 'Content-Type': 'application/json' };
-    window._ML_HEADERS = ML_HEADERS; // updated once apiKey loads below
+    window._ML_HEADERS = ML_HEADERS;
+    let GPU_API_BASE = null;
+
+    // Disable Analyze button immediately; re-enable once apiKey is confirmed loaded.
+    const _analyzeBtn = document.getElementById('analyzeBtn');
+    if (_analyzeBtn) {
+      _analyzeBtn.disabled = true;
+      _analyzeBtn.title = 'Loading configuration…';
+    }
+
     (async () => {
       try {
         const { app } = await import('./firebase-config.js');
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const { getFirestore, doc, getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+        // Wait for auth state once, reuse for both reads.
         const user = await new Promise(resolve => {
           const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
         });
         if (!user) throw new Error('Not signed in');
+
         const db = getFirestore(app);
-        const keySnap = await getDoc(doc(db, 'config', 'apiKey'));
+
+        // Fetch both config docs in parallel — single round trip.
+        const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const [keySnap, gpuSnap] = await Promise.all([
+          getDoc(doc(db, 'config', 'apiKey')),
+          getDoc(doc(db, 'config', 'gpu')),
+        ]);
+
+        // API key
         if (keySnap.exists() && keySnap.data().key) {
           ML_HEADERS = { 'Content-Type': 'application/json', 'X-Beaulix-API-Key': keySnap.data().key };
           window._ML_HEADERS = ML_HEADERS;
+        } else {
+          console.warn('config/apiKey missing or empty in Firestore.');
+        }
+
+        // GPU URL
+        if (gpuSnap.exists() && gpuSnap.data().url) {
+          GPU_API_BASE = gpuSnap.data().url;
+          window._GPU_API_BASE = GPU_API_BASE;
+          checkGPUConnection();
+        } else {
+          console.warn('config/gpu missing — run Colab first.');
+          document.getElementById('gpuDotStatus').className = 'status-dot offline';
+          document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
         }
       } catch (e) {
-        console.warn('Could not load API key from Firestore:', e.message);
-      }
-    })();
-
-    // GPU_API_BASE is read from Firestore (free Spark plan — no Cloud Function needed).
-    // Colab writes config/gpu.url after the ngrok tunnel starts (see sdxl_model.py).
-    // Firestore security rules allow authenticated users to read config/gpu; only
-    // the service account (Colab) can write it.
-    let GPU_API_BASE = null;
-    (async () => {
-      try {
-        const { app } = await import('./firebase-config.js');
-        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        // Wait for signed-in user before reading — Firestore rules require auth.
-        const user = await new Promise(resolve => {
-          const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
-        });
-        if (!user) throw new Error('Not signed in');
-        const db = getFirestore(app);
-        const snap = await getDoc(doc(db, 'config', 'gpu'));
-        if (!snap.exists()) throw new Error('config/gpu document not found — run Colab first');
-        GPU_API_BASE = snap.data().url;
-        window._GPU_API_BASE = GPU_API_BASE;
-        checkGPUConnection();
-      } catch (e) {
-        console.warn('Could not load GPU URL from Firestore:', e.message);
+        console.warn('Firestore config load failed:', e.message);
         document.getElementById('gpuDotStatus').className = 'status-dot offline';
         document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
+      } finally {
+        // Always re-enable the button — even if key load failed, let user try.
+        if (_analyzeBtn) {
+          _analyzeBtn.disabled = false;
+          _analyzeBtn.title = '';
+        }
       }
     })();
 
