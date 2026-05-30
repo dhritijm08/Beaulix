@@ -1011,9 +1011,9 @@
       setupSectionToggle(step1Header, step1Content);
       setupSectionToggle(step2Header, step2Content);
       step2Header.classList.add('collapsed'); step2Content.classList.add('collapsed');
-      humanOptionsSection.style.display = 'none';
+      humanOptionsSection.classList.add('hidden'); humanOptionsSection.style.display = 'none';
       const humanAgeField = document.getElementById('humanAge'); if (humanAgeField && ageRangeSelect.value) humanAgeField.value = ageRangeSelect.value;
-      includeHumanFace.addEventListener('change', () => { humanOptionsSection.style.display = includeHumanFace.checked ? 'block' : 'none'; });
+      includeHumanFace.addEventListener('change', () => { if (includeHumanFace.checked) { humanOptionsSection.classList.remove('hidden'); humanOptionsSection.style.display = 'block'; } else { humanOptionsSection.classList.add('hidden'); humanOptionsSection.classList.add('hidden'); humanOptionsSection.style.display = 'none'; } });
       productType.addEventListener('input', updateGenerateButtonState);
       productColor.addEventListener('input', updateGenerateButtonState);
       sceneDescription.addEventListener('input', updateGenerateButtonState);
