@@ -38,6 +38,7 @@
   const cancelEditBtn = document.getElementById('cancelEditBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const logoutModal = document.getElementById('logoutModal');
+  let isLoggingOut = false;
   const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
   const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
   let isEditMode = false;
@@ -114,7 +115,7 @@
 
   function openLogoutModal() { logoutModal.classList.add('show'); document.body.style.overflow = 'hidden'; }
   function closeLogoutModal() { logoutModal.classList.remove('show'); document.body.style.overflow = ''; }
-  async function handleLogout() { confirmLogoutBtn.disabled = true; confirmLogoutBtn.textContent = 'Signing out...'; try { await signOut(auth); window.location.href = 'index.html'; } catch (error) { showToast('Failed to sign out. Please try again.', 'error'); confirmLogoutBtn.disabled = false; confirmLogoutBtn.textContent = 'Yes, Sign Out'; closeLogoutModal(); } }
+  async function handleLogout() { confirmLogoutBtn.disabled = true; confirmLogoutBtn.textContent = 'Signing out...'; try { isLoggingOut = true; await signOut(auth); window.location.href = 'index.html'; } catch (error) { showToast('Failed to sign out. Please try again.', 'error'); confirmLogoutBtn.disabled = false; confirmLogoutBtn.textContent = 'Yes, Sign Out'; closeLogoutModal(); } }
 
   editToggleBtn.addEventListener('click', () => { if (isEditMode) exitEditMode(); else enterEditMode(); });
   saveBtn.addEventListener('click', saveProfile);
@@ -194,6 +195,6 @@
         } catch {}
       }
     } else { 
-      window.location.href = 'login.html'; 
+      if (!isLoggingOut) { window.location.href = 'login.html'; }
     } 
   });
