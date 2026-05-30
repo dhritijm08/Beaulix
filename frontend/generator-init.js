@@ -264,8 +264,13 @@
 
     async function checkMLEngine() {
       try {
-        const res = await fetch(`${ML_API_BASE}/health`);
-        if (!res.ok) throw new Error();
+        // Use ML_HEADERS so the API key is included if configured, and
+        // set a short timeout so the status dot updates quickly on load.
+        const res = await fetchWithTimeout(`${ML_API_BASE}/health`, {
+          headers: ML_HEADERS,
+          timeout: 10000,
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         _applyMLDegradedState(true);
       } catch {
         _applyMLDegradedState(false);
