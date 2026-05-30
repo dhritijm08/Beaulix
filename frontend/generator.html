@@ -592,7 +592,7 @@
     function updateAnalyzeButtonState() { analyzeBtn.disabled = !validateMarketingProfile() || !_mlEngineOnline; }
 
     function updateGenerateButtonState() {
-      const analysisComplete = analysisResults.style.display === 'block';
+      const analysisComplete = !analysisResults.classList.contains('hidden') && analysisResults.style.display === 'block';
       const productTypeFilled = productType.value.trim() !== '';
       const outputType = document.querySelector('input[name="output-type"]:checked')?.value;
       const durationSelected = outputType === 'video' ? durationSelect?.value : true;
@@ -1033,7 +1033,7 @@
       improvementBanner.style.display = 'none';
       step2PredictionData = null;
       if (!validateMarketingProfile()) { showToast('Please fill all required fields in Step 1','error'); return; }
-      loadingStages.style.display = 'block'; analysisResults.style.display = 'none'; analyzeBtn.disabled = true;
+      loadingStages.style.display = 'block'; analysisResults.classList.add('hidden'); analysisResults.style.display = 'none'; analyzeBtn.disabled = true;
       analyzeBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-spinner"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Analyzing...`;
       try {
         await runStagedLoading();
@@ -1041,7 +1041,7 @@
         const res = await fetch(`${ML_API_BASE}/predict`, { method:'POST', headers: ML_HEADERS, body:JSON.stringify(payload) });
         const responseData = await res.json();
         if (!res.ok) throw new Error(responseData.detail || `HTTP ${res.status}`);
-        analysisResults.style.display = 'block';
+        analysisResults.classList.remove('hidden'); analysisResults.style.display = 'block';
         applyAnalysisPredictions(responseData);
         lastPredictionData = responseData;
 
@@ -1053,7 +1053,7 @@
         updateGenerateButtonState();
         showToast('Marketing analysis complete!','success');
 
-      } catch (error) { showToast(`Error: ${error.message}`,'error'); analysisResults.style.display='none'; }
+      } catch (error) { showToast(`Error: ${error.message}`,'error'); analysisResults.classList.add('hidden'); analysisResults.style.display='none'; }
       finally {
         loadingStages.style.display='none'; analyzeBtn.disabled=false;
         analyzeBtn.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Analyze Marketing Profile <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
@@ -1062,7 +1062,7 @@
     });
 
     generateCreativeBtn.addEventListener('click', async function() {
-      if (analysisResults.style.display==='none') { showToast('Please complete marketing profile analysis first','error'); return; }
+      if (analysisResults.classList.contains('hidden') || analysisResults.style.display==='none') { showToast('Please complete marketing profile analysis first','error'); return; }
       const productTypeVal = productType.value.trim();
       if (!productTypeVal) { showToast('Please enter a product type in Step 2','error'); return; }
       const aspectRatio = document.querySelector('input[name="aspect-ratio"]:checked')?.value;
