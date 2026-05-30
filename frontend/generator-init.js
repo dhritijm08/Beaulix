@@ -1,22 +1,34 @@
-    const ML_API_BASE = "https://beaulix.onrender.com";
+    // ── Security note ────────────────────────────────────────────────────
+    // ML predictions are routed through Firebase Cloud Functions (mlPredict /
+    // mlPredictStep2).  The FastAPI backend URL and BEAULIX_API_KEY live only
+    // in Firebase Secrets — they never reach the browser.  Do NOT add direct
+    // fetch() calls to the Render backend here.
+    //
+    // GPU (Colab/ngrok) calls go directly from the browser to the ngrok tunnel
+    // because the GPU is ephemeral and has no stable HTTPS domain that Firebase
+    // Functions could proxy.  The GPU URL is fetched once via the getGpuUrl
+    // Cloud Function so the tunnel URL is never hardcoded in static HTML.
+    // ─────────────────────────────────────────────────────────────────────
+
     const FETCH_TIMEOUT = 300000;
     const VIDEO_LOAD_TIMEOUT = 180000;
     const DEBUG = false; // set true locally to enable verbose console output
 
+    // Firebase Functions httpsCallable refs — populated after Firebase loads.
+    // ML calls (mlPredict / mlPredictStep2) go through these; the backend URL
+    // and API key are kept exclusively in Firebase Secrets.
+    let _mlPredict     = null;  // httpsCallable for /predict
+    let _mlPredictStep2 = null; // httpsCallable for /predict-step2
+
     // Single config namespace — avoids polluting window with individual globals.
-    // Modules that need these values read from window.BEAULIX_CONFIG.
     window.BEAULIX_CONFIG = {
-      ML_API_BASE,
-      ML_HEADERS: { 'Content-Type': 'application/json' },
       GPU_API_BASE: null,
       NGROK_HEADERS: { 'ngrok-skip-browser-warning': 'true', 'User-Agent': 'Mozilla/5.0 (compatible; Beaulix/1.0)' },
     };
 
-    // Local aliases for use within this script.
-    let ML_HEADERS = window.BEAULIX_CONFIG.ML_HEADERS;
     let GPU_API_BASE = null;
 
-    // Disable Analyze button immediately; re-enable once apiKey is confirmed loaded.
+    // Disable Analyze button immediately; re-enable once Functions are confirmed loaded.
     const _analyzeBtn = document.getElementById('analyzeBtn');
     if (_analyzeBtn) {
       _analyzeBtn.disabled = true;
@@ -26,48 +38,46 @@
     (async () => {
       try {
         const { app } = await import('./firebase-config.js');
-        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const { getFirestore, doc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const { getAuth }    = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
 
-        // Wait for auth state once, reuse for both reads.
+        // Wait for auth state once.
         const user = await new Promise(resolve => {
           const unsub = getAuth(app).onAuthStateChanged(u => { unsub(); resolve(u); });
         });
         if (!user) throw new Error('Not signed in');
 
-        const db = getFirestore(app);
+        // Wire up ML Cloud Function callables — these carry the user's Firebase ID
+        // token automatically.  The backend URL and API key stay in Secrets.
+        const functions = getFunctions(app);
+        _mlPredict      = httpsCallable(functions, 'mlPredict',      { timeout: FETCH_TIMEOUT });
+        _mlPredictStep2 = httpsCallable(functions, 'mlPredictStep2', { timeout: FETCH_TIMEOUT });
 
-        // Fetch both config docs in parallel — single round trip.
-        const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        const [keySnap, gpuSnap] = await Promise.all([
-          getDoc(doc(db, 'config', 'apiKey')),
-          getDoc(doc(db, 'config', 'gpu')),
-        ]);
-
-        // API key
-        if (keySnap.exists() && keySnap.data().key) {
-          ML_HEADERS = { 'Content-Type': 'application/json', 'X-Beaulix-API-Key': keySnap.data().key };
-          window.BEAULIX_CONFIG.ML_HEADERS = ML_HEADERS;
-        } else {
-          console.warn('config/apiKey missing or empty in Firestore.');
-        }
-
-        // GPU URL
-        if (gpuSnap.exists() && gpuSnap.data().url) {
-          GPU_API_BASE = gpuSnap.data().url;
-          window.BEAULIX_CONFIG.GPU_API_BASE = GPU_API_BASE;
-          checkGPUConnection();
-        } else {
-          console.warn('config/gpu missing — run Colab first.');
+        // GPU URL — fetched via getGpuUrl Cloud Function so it is never hardcoded.
+        try {
+          const getGpuUrl = httpsCallable(functions, 'getGpuUrl', { timeout: 10000 });
+          const gpuResult = await getGpuUrl();
+          if (gpuResult.data?.url) {
+            GPU_API_BASE = gpuResult.data.url;
+            window.BEAULIX_CONFIG.GPU_API_BASE = GPU_API_BASE;
+            checkGPUConnection();
+          } else {
+            if (DEBUG) console.warn('getGpuUrl returned no URL — run Colab first.');
+            document.getElementById('gpuDotStatus').className = 'status-dot offline';
+            document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
+          }
+        } catch (gpuErr) {
+          if (DEBUG) console.warn('getGpuUrl failed:', gpuErr.message);
           document.getElementById('gpuDotStatus').className = 'status-dot offline';
           document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
         }
+
       } catch (e) {
-        console.warn('Firestore config load failed:', e.message);
+        if (DEBUG) console.warn('Firebase config load failed:', e.message);
         document.getElementById('gpuDotStatus').className = 'status-dot offline';
         document.getElementById('gpuTextStatus').textContent = 'GPU: Offline';
       } finally {
-        // Always re-enable the button — even if key load failed, let user try.
+        // Always re-enable the button.
         if (_analyzeBtn) {
           _analyzeBtn.disabled = false;
           _analyzeBtn.title = '';
@@ -146,21 +156,11 @@
     let lastGeneratedFilename = 'beaulix-visual.jpg';
     let retryPayload = null;
 
-    // Benchmarks are fetched from the ML API in applyAnalysisPredictions()
-    // and stored here so both Step 1 display and the post-generation banner
-    // always use the same values — no more frontend/backend mismatch.
-    // Per-category benchmark means derived from the 97,920-row Excel training dataset.
-    // These match CTR_TARGETS / CONV_TARGETS / ENG_TARGETS in model.py exactly.
-    // The API overwrites activeBenchmarks on every /predict call — these are only
-    // used as a safe fallback before the first API response arrives.
-    const CATEGORY_BENCHMARKS = {
-      makeup:    { ctr: 2.825, conversion: 1.372, engagement: 3.701 },
-      skincare:  { ctr: 1.892, conversion: 1.168, engagement: 4.015 },
-      haircare:  { ctr: 1.787, conversion: 1.093, engagement: 3.503 },
-      fragrance: { ctr: 1.232, conversion: 0.653, engagement: 2.491 },
-      bodycare:  { ctr: 1.332, conversion: 0.817, engagement: 2.662 },
-    };
-    let activeBenchmarks = CATEGORY_BENCHMARKS.makeup; // updated on category change + API response
+    // activeBenchmarks is populated from the /predict API response (benchmarks field).
+    // The API is the single source of truth — values are derived from the 97,920-row
+    // Excel training dataset and match CTR_TARGETS/CONV_TARGETS/ENG_TARGETS in constants.py.
+    // No hardcoded copy here: if the backend values change, the frontend automatically reflects them.
+    let activeBenchmarks = { ctr: 0, conversion: 0, engagement: 0 }; // populated on first /predict response
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -266,28 +266,11 @@
 
       // Show / hide a degraded-state banner so users know why analysis is unavailable.
       let banner = document.getElementById('mlDegradedBanner');
+      // Banner is pre-rendered in generator.html — just toggle display.
       if (!online) {
-        if (!banner) {
-          banner = document.createElement('div');
-          banner.id = 'mlDegradedBanner';
-          banner.style.cssText = [
-            'display:flex', 'align-items:center', 'gap:10px',
-            'background:#fff3cd', 'color:#856404', 'border:1px solid #ffc107',
-            'border-radius:8px', 'padding:12px 16px', 'margin-bottom:16px',
-            'font-size:0.875rem', 'font-weight:500',
-          ].join(';');
-          banner.innerHTML =
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-            '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>' +
-            '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-            '<span>ML analysis is currently unavailable — the prediction engine is offline. ' +
-            'Please wait a moment and try again, or refresh the page.</span>';
-          // Insert before the Step 1 form
-          const step1Content = document.getElementById('step1Content');
-          if (step1Content) step1Content.prepend(banner);
-        }
+        if (banner) banner.style.display = 'flex';
       } else if (banner) {
-        banner.remove();
+        banner.style.display = 'none';
       }
       // Re-evaluate Analyze button: also requires the form to be valid.
       updateAnalyzeButtonState();
@@ -295,13 +278,17 @@
 
     async function checkMLEngine() {
       try {
-        // Use ML_HEADERS so the API key is included if configured, and
-        // set a short timeout so the status dot updates quickly on load.
-        const res = await fetchWithTimeout(`${ML_API_BASE}/health`, {
-          headers: ML_HEADERS,
-          timeout: 10000,
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // Health check via the Firebase Functions domain — the same path the
+        // browser uses for all ML calls.  A successful response means the proxy
+        // (and therefore the backend) is reachable.
+        if (!_mlPredict) { _applyMLDegradedState(false); return; }
+        // Use a lightweight OPTIONS/ping via httpsCallable with an empty body
+        // rather than a raw fetch to the backend — keeps the backend URL hidden.
+        // The Function returns 200 with {status:'healthy'} when the backend is up.
+        await Promise.race([
+          _mlPredict({ _healthCheck: true }),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000)),
+        ]);
         _applyMLDegradedState(true);
       } catch {
         _applyMLDegradedState(false);
@@ -741,7 +728,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       checkGPUConnection(); checkMLEngine();
-      productCategory.addEventListener('change', () => { updateCategoryFields(); updateDecisionLogic(); updateProfileSummary(); updateAnalyzeButtonState(); activeBenchmarks = CATEGORY_BENCHMARKS[productCategory.value] || CATEGORY_BENCHMARKS.makeup; });
+      productCategory.addEventListener('change', () => { updateCategoryFields(); updateDecisionLogic(); updateProfileSummary(); updateAnalyzeButtonState(); // activeBenchmarks is updated from the API response after each /predict call });
       occasion.addEventListener('change', () => { updateAnalyzeButtonState(); updateProfileSummary(); });
       ageRangeSelect.addEventListener('change', () => { updateDecisionLogic(); updateAnalyzeButtonState(); updateProfileSummary(); const humanAgeField = document.getElementById('humanAge'); if (humanAgeField) humanAgeField.value = ageRangeSelect.value; });
       genderSelect.addEventListener('change', () => { updateDecisionLogic(); updateAnalyzeButtonState(); updateProfileSummary(); const gd = document.getElementById('gender-disclaimer'); if (gd) gd.style.display = ['non-binary','all-genders'].includes(genderSelect.value) ? 'block' : 'none'; });
@@ -776,9 +763,11 @@
       try {
         await runStagedLoading();
         const payload = buildPayload();
-        const res = await fetch(`${ML_API_BASE}/predict`, { method:'POST', headers: ML_HEADERS, body:JSON.stringify(payload) });
-        const responseData = await res.json();
-        if (!res.ok) throw new Error(responseData.detail || `HTTP ${res.status}`);
+        // Call via Firebase Cloud Function — backend URL and API key stay in Secrets.
+        if (!_mlPredict) throw new Error('ML engine not initialised — please refresh the page.');
+        const result  = await _mlPredict(payload);
+        const responseData = result.data;
+        if (!responseData) throw new Error('Empty response from ML engine.');
         analysisResults.classList.remove('hidden'); analysisResults.style.display = 'block';
         applyAnalysisPredictions(responseData);
         lastPredictionData = responseData;
@@ -809,17 +798,14 @@
       if (!outputType) { showToast('Please select output type','error'); return; }
       if (outputType==='video' && !document.getElementById('duration')?.value) { showToast('Please select a video duration','error'); return; }
 
-      // ── Call /predict-step2 first to get a real before/after delta ───
+      // ── Call predict-step2 first to get a real before/after delta ───
       step2PredictionData = null; // reset
       try {
         const step2Payload = buildStep2Payload();
-        const s2Res = await fetch(`${ML_API_BASE}/predict-step2`, {
-          method: 'POST',
-          headers: ML_HEADERS,
-          body: JSON.stringify(step2Payload)
-        });
-        if (s2Res.ok) {
-          step2PredictionData = await s2Res.json();
+        // Route through Firebase Functions — keeps backend URL and API key hidden.
+        if (_mlPredictStep2) {
+          const s2Result = await _mlPredictStep2(step2Payload);
+          if (s2Result.data) step2PredictionData = s2Result.data;
         }
       } catch (e) {
         if (DEBUG) console.warn('predict-step2 failed, falling back to step1 data:', e);

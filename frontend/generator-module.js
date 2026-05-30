@@ -8,17 +8,24 @@
     // Mutable ref so cloudinary-module always reads the current user without closure issues
     const currentUserIdRef = { current: null };
 
-    // Reveal body once Firebase auth resolves (handles visibility:hidden flash guard)
-    setTimeout(() => { document.body.style.visibility = 'visible'; }, 4000);
+    // Reveal body once Firebase auth resolves.
+    // A 2.5s safety timeout ensures the page is never permanently invisible if
+    // auth takes longer than expected (e.g. slow connection, cold start).
+    // The auth callbacks (onUser / onNoUser) reveal the body immediately on success.
+    const _foucGuard = setTimeout(() => { document.body.style.visibility = 'visible'; }, 2500);
+    // _foucGuard is cleared inside onUser/onNoUser via window._clearFoucGuard
+    window._clearFoucGuard = () => clearTimeout(_foucGuard);
 
     initNavAuth({
       injectDropdownLinks: true,
       onUser: user => {
         currentUserIdRef.current = user.uid;
+        window._clearFoucGuard?.();
         document.body.style.visibility = 'visible';
       },
       onNoUser: () => {
         currentUserIdRef.current = null;
+        window._clearFoucGuard?.();
         window.location.href = 'login.html';
       },
     });
@@ -31,11 +38,11 @@
       debug: typeof DEBUG !== 'undefined' && DEBUG,
     });
 
-    // Registers window.onStep2SelectionChange and window.renderImprovementBanner
-    // These bridge into the classic <script> block via window globals.
+    // Registers window.onStep2SelectionChange and window.renderImprovementBanner.
+    // ML calls are routed through window._mlPredictStep2 (httpsCallable set by
+    // generator-init.js) — the backend URL and API key never leave Firebase Secrets.
     const { onStep2SelectionChange } = initStep2Module({
-      mlApiBase:            window.BEAULIX_CONFIG?.ML_API_BASE,
-      mlHeaders:            window.BEAULIX_CONFIG?.ML_HEADERS,
+      mlPredictStep2Fn:     () => window._mlPredictStep2,
       buildStep2Payload:    () => window._buildStep2Payload?.(),
       getLastPredictionData: () => window._lastPredictionData,
       setStep2PredictionData: d => { window._step2PredictionData = d; },

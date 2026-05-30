@@ -32,7 +32,6 @@ The model is seeded on 97,920 rows; per-prediction retraining provides marginal
 accuracy gains at significant CPU cost.
 """
 
-import math
 import os
 import threading
 import time
@@ -41,13 +40,11 @@ import warnings
 from datetime import datetime
 
 import joblib
-import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import cross_val_score, KFold
 
-warnings.filterwarnings("ignore")
+# Suppress only specific known-benign scikit-learn warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="sklearn")
+warnings.filterwarnings("ignore", message=".*n_features_in_.*")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -55,7 +52,6 @@ logger = logging.getLogger(__name__)
 from constants import (
     EXCEL_COL_MAP,
     FEATURE_COLS,
-    VALUE_NORMALISATIONS,
     CTR_TARGETS,
     CONV_TARGETS,
     ENG_TARGETS,
@@ -171,10 +167,13 @@ class RecommendationModel:
     @staticmethod
     def _normalise_value(col: str, value: str) -> str:
         """
-        VALUE_NORMALISATIONS is intentionally empty — kept so future
-        divergences can be patched in constants.py without changing call-sites.
+        Pass-through normalisation hook.  Currently a no-op — add mappings here
+        when frontend values diverge from training data labels, e.g.:
+            _NORMALISATIONS = {"age_range": {"18-24 yrs": "18-24"}}
+        Keeping the call-site in place means adding a mapping never requires
+        touching _encode_input(), _fallback(), or sub-module signatures.
         """
-        return VALUE_NORMALISATIONS.get(col, {}).get(value, value)  # noqa: SIM401
+        return value
 
     # ── Encode a single input row for prediction ───────────────────────
     def _encode_input(self, features_dict: dict) -> pd.DataFrame:

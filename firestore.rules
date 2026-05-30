@@ -3,10 +3,13 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // config/gpu — ngrok GPU URL written by Colab on startup.
-    // config/apiKey — ML backend API key, written once by admin/deploy script.
-    // Both: authenticated users can read, no client writes allowed.
+    // Authenticated users can read (needed by generator-init.js via getGpuUrl
+    // Cloud Function). No client writes allowed.
+    // NOTE: config/apiKey has been removed. The ML API key is now stored
+    // exclusively as a Firebase Secret (BEAULIX_API_KEY) and is only accessible
+    // to Cloud Functions — it never reaches the browser.
     match /config/{docId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && docId == "gpu";
       allow write: if false;
     }
 

@@ -1,6 +1,54 @@
 
 # Beaulix ✨
 
+---
+
+## 🚨 CRITICAL — Action Required Before Using This Repo
+
+**A Firebase Admin SDK private key was found in this repository.**
+The affected file is `beaulix-model-firebase-adminsdk-fbsvc-455edb495a.json`.
+The private key in the committed version has been replaced with a placeholder, but
+**the original key must be revoked immediately** even if the repo is private.
+
+### Steps (do these now, in order):
+
+1. **Revoke the key** at [https://console.cloud.google.com/iam-admin/serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+   — find service account `firebase-adminsdk-fbsvc@beaulix-model.iam.gserviceaccount.com`,
+   delete key ID `455edb495a3cf89bc35ad04b63b341f5aeb903ba`.
+
+2. **Create a new key** and store it as a Render environment variable:
+   `GOOGLE_SERVICE_ACCOUNT_JSON=<full JSON content>`
+   Never save it as a file in the repository.
+
+3. **Purge the key from git history** (even if already rotated — history is searchable):
+   ```bash
+   # Using git-filter-repo (recommended):
+   pip install git-filter-repo
+   git filter-repo --path beaulix-model-firebase-adminsdk-fbsvc-455edb495a.json --invert-paths
+   git push --force --all
+   ```
+
+4. **Delete `config/apiKey` from Firestore** (Firebase Console → Firestore → config collection).
+   The ML API key is now managed exclusively as a Firebase Secret (`BEAULIX_API_KEY`) and
+   is no longer fetched from Firestore by the browser.
+
+5. **Set the Firebase Secret** if not already done:
+   ```bash
+   firebase functions:secrets:set BEAULIX_API_KEY
+   ```
+
+---
+
+## ⚠️ Security Notice
+
+- **Firebase Admin SDK keys** (`beaulix-model-*.json`, `*adminsdk*.json`) are gitignored.  
+  Store them via Render environment variable `GOOGLE_SERVICE_ACCOUNT_JSON` only.
+- **ML API key** (`BEAULIX_API_KEY`) and **Cloudinary credentials** are managed via Firebase Secrets.  
+  The browser **never** receives the API key — all ML calls go through Firebase Cloud Functions.  
+  See `functions/index.js` and `.env.example` for the full list of required secrets.
+- If a key is ever accidentally committed, rotate it immediately and purge git history.
+
+
 Beaulix is an AI-powered beauty and wellness recommendation platform that provides personalized suggestions based on user preferences and analysis.  
 The project combines a **FastAPI backend** with a responsive frontend to deliver an interactive recommendation experience.
 
@@ -47,7 +95,6 @@ Beaulix/
 │   ├── login.html                # Login page
 │   ├── profile.html              # User profile page
 │   ├── firebase-config.js        # Firebase configuration
-│   ├── cloudinary-config.js      # Cloudinary configuration
 │   └── *.css / *.js              # Styling and scripts
 │
 ├── firebase.json

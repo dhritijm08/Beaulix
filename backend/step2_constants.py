@@ -2,7 +2,7 @@
 step2_constants.py
 ==================
 Step 2 creative multipliers and fallback heuristics extracted from constants.py.
-Import from this module directly, or from constants.py which re-exports everything.
+Import from this module directly.
 """
 
 # ── Step 2 creative multipliers ───────────────────────────────────────

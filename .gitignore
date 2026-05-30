@@ -7,14 +7,14 @@ yarn-error.log*
 firebase-debug.log*
 firebase-debug.*.log*
 
-# Firebase
-.firebase/
-firebase.json
-firebase-config.js
+# Firebase config — tracked in version control (no secrets inside; uses /__/firebase/init.json)
+# firebase.json is NOT ignored — it must be committed.
 
-# Firebase service account keys — NEVER commit these
-# These grant admin access to the Firebase project.
-# Rotate immediately at: https://console.cloud.google.com/iam-admin/serviceaccounts
+# Firebase service account keys — NEVER commit these.
+# These grant full admin access to the Firebase project.
+# ⚠  If you find one of these files in the repo, rotate the key IMMEDIATELY at:
+#    https://console.cloud.google.com/iam-admin/serviceaccounts
+# Store keys as Render env vars (GOOGLE_SERVICE_ACCOUNT_JSON) or Firebase Secrets only.
 beaulix-model-*.json
 *adminsdk*.json
 *service-account*.json
@@ -69,10 +69,17 @@ __pycache__/
 *$py.class
 
 # Training data and model artifacts
-# Downloaded at build time via backend/download_data.py
+# Downloaded at build time via backend/download_data.py — never commit these.
+# Run: git rm --cached backend/*.xlsx  (if accidentally tracked)
 backend/*.xlsx
 backend/dataset.csv
 backend/models/*.pkl
+
+# Colab audio assets — runtime files for the GPU server, not source code.
+# Upload these to Google Drive or the Colab runtime directly.
+# Run: git rm --cached colab/tune/*  (if accidentally tracked)
+colab/tune/*.mp3
+colab/tune/
 
 # IDE files
 .vscode/

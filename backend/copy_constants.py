@@ -2,8 +2,7 @@
 copy_constants.py
 =================
 Ad-copy lookup tables extracted from constants.py.
-All AD_COPY_* dictionaries live here; import from this module directly,
-or import from constants.py which re-exports everything for backward compat.
+All AD_COPY_* dictionaries live here; import directly from this module.
 """
 
 # ── Ad-copy constants ─────────────────────────────────────────────────

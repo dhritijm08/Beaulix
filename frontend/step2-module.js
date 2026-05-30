@@ -5,67 +5,58 @@
  *
  * Usage:
  *   import { initStep2Module, renderImprovementBanner } from './step2-module.js';
- *   initStep2Module({ mlApiBase, mlHeaders, getLastPredictionData,
- *                     getActiveBenchmarks, getStep2PredictionData,
- *                     setStep2PredictionData, brandStyleSelect, debug });
+ *   initStep2Module({ mlPredictStep2Fn, buildStep2Payload,
+ *                     getLastPredictionData, setStep2PredictionData, debug });
  *   // Call renderImprovementBanner() after a successful Generate.
+ *
+ * Security: ML calls go through the Firebase Cloud Function httpsCallable
+ * (mlPredictStep2Fn) — the FastAPI backend URL and API key never reach the
+ * browser.  Do NOT add raw fetch() calls to the backend here.
  */
 
 /**
  * Initialise the Step 2 live-scoring debouncer.
  *
- * @param {object} opts
- * @param {string}   opts.mlApiBase              - e.g. "http://localhost:8000"
- * @param {object}   opts.mlHeaders              - ML_HEADERS with Content-Type + optional API key
- * @param {function} opts.buildStep2Payload      - () => payload object for /predict-step2
+ * @param {object}   opts
+ * @param {function} opts.mlPredictStep2Fn       - () => httpsCallable ref for mlPredictStep2
+ * @param {function} opts.buildStep2Payload      - () => payload object for predict-step2
  * @param {function} opts.getLastPredictionData  - () => step1 prediction data or null
  * @param {function} opts.setStep2PredictionData - (data) => void, updates caller's state
  * @param {boolean}  [opts.debug]
  * @returns {{ onStep2SelectionChange: function }}
  */
 export function initStep2Module({
-  mlApiBase,
-  mlHeaders,
+  mlPredictStep2Fn,
   buildStep2Payload,
   getLastPredictionData,
   setStep2PredictionData,
   debug = false,
 }) {
   let debounceTimer = null;
-  let activeController = null;  // AbortController for the in-flight request
+  let activeRequestId = 0;  // monotonic counter — cheap in-flight cancellation
 
   async function onStep2SelectionChange() {
     if (!getLastPredictionData()) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
-      // Cancel any request that is still in flight from the previous selection.
-      if (activeController) {
-        activeController.abort();
-      }
-      activeController = new AbortController();
-      const signal = activeController.signal;
+      const thisId = ++activeRequestId;
       try {
+        const callable = mlPredictStep2Fn?.();
+        if (!callable) return; // Functions not yet initialised
         const payload = buildStep2Payload();
-        const res = await fetch(`${mlApiBase}/predict-step2`, {
-          method:  'POST',
-          headers: mlHeaders,
-          body:    JSON.stringify(payload),
-          signal,
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setStep2PredictionData(data);
+        const result  = await callable(payload);
+        // Discard if a newer request has already started.
+        if (thisId !== activeRequestId) {
+          if (debug) console.debug('step2 response discarded (superseded by newer selection)');
+          return;
+        }
+        if (result.data) {
+          setStep2PredictionData(result.data);
           // updateStep2ScoreWidget is intentionally a no-op (widget removed);
           // data is kept in state so renderImprovementBanner has real before/after delta.
         }
       } catch (e) {
-        if (e.name === 'AbortError') {
-          if (debug) console.debug('step2 fetch aborted (superseded by newer selection)');
-          return;
-        }
-        if (window.DEBUG || false) console.warn('Live step2 score update failed:', e);
-      } finally {
-        activeController = null;
+        if (debug) console.warn('Live step2 score update failed:', e);
       }
     }, 350); // 350ms debounce — avoids hammering the API on rapid changes
   }
@@ -75,10 +66,10 @@ export function initStep2Module({
 
 /**
  * Render the improvement banner after a successful Generate.
- * Call this after /predict-step2 resolves on the Generate click.
+ * Call this after predict-step2 resolves on the Generate click.
  *
  * @param {object} opts
- * @param {object|null} opts.step2PredictionData  - result from /predict-step2, or null
+ * @param {object|null} opts.step2PredictionData  - result from predict-step2, or null
  * @param {object|null} opts.lastPredictionData   - step 1 prediction result
  * @param {object}      opts.activeBenchmarks     - { conversion, ctr, engagement }
  * @param {HTMLElement} opts.improvementBanner

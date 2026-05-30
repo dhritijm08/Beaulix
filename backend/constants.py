@@ -59,21 +59,11 @@ EXCEL_AGE_NORMALISE: dict = {
 }
 
 VALUE_NORMALISATIONS: dict = {}
-# ^ INTENTIONALLY EMPTY — do not add entries unless the frontend and Excel training
-# data genuinely diverge.  Current status:
-#   • age_range:  train_simple_model.py normalises "45-54" → "45-60" before fitting,
-#                 so the encoder knows "45-60" and the frontend sends "45-60". No mapping needed.
-#   • gender:     train_simple_model.py synthesises "non-binary" and "all-genders" rows
-#                 so both are first-class encoder classes. No mapping needed.
-# The _normalise_value() method in model.py still calls this dict on every request so
-# that future divergences can be fixed here with one line — but it is effectively a
-# no-op. Do NOT remove the dict or the method; add mappings here when needed.
-#
-# WARNING: Adding a mapping remaps ALL predictions for that (col, value) pair, including
-# cached Excel lookups and background retrain data.  This can silently change model
-# behaviour for existing users.  Add a test in tests/ asserting the dict stays empty
-# until you explicitly intend to change it:
-#   assert VALUE_NORMALISATIONS == {}, "Update this test if you intentionally added a mapping"
+# ^ INTENTIONALLY EMPTY — kept for any sub-modules that still import it directly.
+# Add per-column remappings here when the frontend value diverges from the training
+# label, e.g. {"age_range": {"45-54": "45-60"}}.
+# model._normalise_value() is the sole call-site; it now returns the value directly
+# (no dict lookup) but the hook remains for future use.
 
 # ── RandomForest hyperparameters ──────────────────────────────────────
 RF_PARAMS = dict(

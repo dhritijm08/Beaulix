@@ -8,7 +8,6 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, field_validator
 from typing import ClassVar, Optional
 import uvicorn
-import pandas as pd
 import os
 import logging
 import asyncio
@@ -107,12 +106,7 @@ async def lifespan(app: FastAPI):
     bg.start()
     # Don't join — let uvicorn bind the port now. Endpoints guard against model=None.
     yield
-    # Shutdown — signal the daemon-thread fallback path (used when executor is None)
-    # then drain both thread pools so in-flight work finishes cleanly.
-    import threading as _threading
-    if not hasattr(model, '_shutdown_event'):
-        model._shutdown_event = _threading.Event()
-    model._shutdown_event.set()
+    # Shutdown — drain both thread pools so in-flight work finishes cleanly.
     executor.shutdown(wait=True)
     retrain_executor.shutdown(wait=True)
 
@@ -154,9 +148,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-Beaulix-API-Key", "Authorization"],
+    expose_headers=[],
 )
 
 
@@ -404,6 +398,7 @@ async def get_step2_recommendations(request: Request, body: PredictionRequest):
 async def get_dataset_stats(request: Request):
     try:
         if os.path.exists(DATASET_PATH):
+            import pandas as pd  # lazy import — pandas (~35 MB) not needed at startup
             df = pd.read_csv(DATASET_PATH)
             # dataset_path intentionally omitted — exposes server filesystem layout.
             # last_5_rows limited to non-sensitive columns only.
