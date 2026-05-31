@@ -24,8 +24,8 @@
   <link rel="stylesheet" href="generator.css">
   <link rel="stylesheet" href="responsive.css">
 </head>
+    <!--[if IE]><div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a0a2e;color:#fff;padding:14px 20px;text-align:center;font-family:sans-serif;font-size:14px">Internet Explorer is not supported. Please use <a href="https://www.google.com/chrome/" style="color:#c084fc">Chrome</a>, <a href="https://www.microsoft.com/edge" style="color:#c084fc">Edge</a>, <a href="https://www.apple.com/safari/" style="color:#c084fc">Safari</a>, or <a href="https://www.mozilla.org/firefox/" style="color:#c084fc">Firefox</a>.</div><![endif]-->
 <body>
-<!--[if IE]><div id="ie-banner" style="background:#8C6A4A;color:white;text-align:center;padding:14px 20px;font-family:Arial,sans-serif;font-size:14px;position:fixed;top:0;left:0;right:0;z-index:99999;">Internet Explorer is not supported. Please use <a href="https://www.google.com/chrome/" style="color:#fff;font-weight:bold;text-decoration:underline;">Chrome</a>, <a href="https://www.microsoft.com/edge" style="color:#fff;font-weight:bold;text-decoration:underline;">Edge</a>, <a href="https://www.apple.com/safari/" style="color:#fff;font-weight:bold;text-decoration:underline;">Safari</a>, or <a href="https://www.mozilla.org/firefox/" style="color:#fff;font-weight:bold;text-decoration:underline;">Firefox</a> for the best experience.</div><![endif]-->
 
   <header class="navbar navbar-compact">
     <div class="logo-wrapper">
@@ -221,7 +221,7 @@
 
         <div class="panel-content collapsed" id="step2Content">
           <div class="form-grid">
-            <div class="form-group"><label for="productType">Product Type *</label><input type="text" id="productType" class="form-control" placeholder="e.g., Lipstick, Serum, Moisturizer"><small>Specify your exact product type</small></div>
+            <div class="form-group"><label for="productType">Product Type *</label><select id="productType" class="form-control" disabled><option value="" disabled selected>Select a category first</option></select><small>Select your exact product type</small></div>
             <div class="form-group"><label for="productColor">Product Color</label><input type="text" id="productColor" class="form-control" placeholder="e.g., Ruby Red, Nude Pink"><small>Colour / shade of product</small></div>
             <div class="form-group full-width"><label for="sceneDescription">Scene Description</label><textarea id="sceneDescription" class="form-control" placeholder="e.g., Applying in front of mirror, At vanity, Outdoors..." rows="2"></textarea></div>
             <div class="form-group">

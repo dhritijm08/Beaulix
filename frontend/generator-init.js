@@ -296,6 +296,100 @@
         _applyMLDegradedState(false);
       }
     }
+    const productTypeOptions = {
+      skincare: [
+        // Cleansers
+        'Micellar Water','Cleansing Oil','Cleansing Balm','Foam Cleanser','Gel Cleanser','Cream Cleanser','Milk Cleanser','Bar Cleanser','Clay Cleanser','Powder Cleanser','Cleansing Wipes','Makeup Remover',
+        // Toners & Essences
+        'Toner','Essence','Facial Mist','Lotion (Japanese)',
+        // Serums & Treatments
+        'Serum','Face Oil','Ampoule','Booster','Retinol Treatment','Vitamin C Serum','Niacinamide Serum','Hyaluronic Acid Serum','Exfoliating Serum','Brightening Serum','Anti-Aging Serum',
+        // Moisturisers
+        'Moisturiser','Day Cream','Night Cream','Gel Moisturiser','Water Cream','Sleeping Mask','Face Butter','Rich Cream','Lightweight Lotion',
+        // Eye & Lip Care
+        'Eye Cream','Eye Gel','Eye Serum','Lip Balm','Lip Mask','Lip Treatment','Lip Scrub',
+        // Masks & Exfoliants
+        'Sheet Mask','Clay Mask','Peel-Off Mask','Sleeping Pack','Mud Mask','Brightening Mask','Exfoliating Mask','Chemical Exfoliant','Physical Scrub','Enzyme Powder',
+        // SPF
+        'Sunscreen SPF 30','Sunscreen SPF 50','SPF 50+ Sunscreen','Tinted Sunscreen','Mineral Sunscreen','Chemical Sunscreen','SPF Moisturiser','After-Sun Lotion',
+        // Spot & Targeted
+        'Spot Treatment','Pore Strip','Blackhead Mask','Neck Cream','Décolletage Serum','Face Primer (Skincare)'
+      ],
+      makeup: [
+        // Face
+        'Foundation','Tinted Moisturiser','BB Cream','CC Cream','Concealer','Colour Corrector','Face Primer','Setting Powder','Loose Powder','Setting Spray','Blush','Bronzer','Contour Powder','Contour Stick','Highlighter','Illuminator','Blush Stick','Bronzer Stick','Cheek Tint',
+        // Eyes
+        'Eyeshadow Palette','Single Eyeshadow','Eye Primer','Eyeliner Pencil','Liquid Eyeliner','Gel Eyeliner','Kohl Eyeliner','Eyeshadow Stick','Mascara','Lengthening Mascara','Volumising Mascara','Tubing Mascara','Brow Pencil','Brow Gel','Brow Pomade','Brow Powder','Brow Tint','Brow Serum','False Lashes','Lash Serum','Eyelid Tape',
+        // Lips
+        'Lipstick','Matte Lipstick','Satin Lipstick','Sheer Lipstick','Lip Gloss','Liquid Lipstick','Lip Liner','Lip Stain','Lip Plumper','Lip Oil','Tinted Lip Balm','Ombre Lip Tint',
+        // Nails
+        'Nail Polish','Gel Nail Polish','Nail Top Coat','Nail Base Coat','Nail Treatment','Cuticle Oil','Nail Strengthener','Press-On Nails',
+        // Tools
+        'Makeup Brush Set','Foundation Brush','Blending Sponge','Beauty Blender','Eyelash Curler','Makeup Setting Mist'
+      ],
+      fragrance: [
+        // Fine Fragrance
+        'Parfum (Extrait)','Eau de Parfum (EDP)','Eau de Toilette (EDT)','Eau de Cologne (EDC)','Eau Fraîche','Solid Perfume',
+        // Body & Hair Fragrance
+        'Body Mist','Body Spray','Hair Mist','Hair Perfume','Shower Gel (Scented)','Body Lotion (Scented)','Scented Body Oil','Perfumed Talc',
+        // Home Fragrance
+        'Scented Candle','Reed Diffuser','Room Spray','Linen Spray','Wax Melt','Car Freshener','Incense Sticks','Incense Cones','Potpourri','Diffuser Oil Refill',
+        // Niche & Layering
+        'Perfume Oil','Roll-On Perfume','Layering Fragrance','Discovery Set / Sampler','Gift Set'
+      ],
+      haircare: [
+        // Cleansing
+        'Shampoo','Clarifying Shampoo','Scalp Scrub Shampoo','Dry Shampoo','Co-Wash','Sulphate-Free Shampoo','Colour-Safe Shampoo','Volumising Shampoo','Anti-Dandruff Shampoo','Hair Cleansing Cream',
+        // Conditioning
+        'Conditioner','Deep Conditioner','Leave-In Conditioner','Rinse-Out Conditioner','Hair Mask','Protein Treatment','Moisture Treatment','Bond Repair Treatment','Overnight Hair Mask',
+        // Scalp Care
+        'Scalp Serum','Scalp Oil','Scalp Toner','Scalp Treatment','Anti-Dandruff Treatment','Scalp Exfoliant','DHT Blocker Serum',
+        // Styling
+        'Hair Oil','Argan Oil','Hair Serum','Heat Protectant','Curl Cream','Curl Gel','Curl Mousse','Defining Gel','Edge Control','Hair Wax','Hair Pomade','Hair Clay','Volumising Mousse','Texturising Spray','Salt Spray','Hold Spray','Flexible Hold Spray','Strong Hold Hairspray',
+        // Colour & Treatment
+        'Hair Dye / Colour','Root Touch-Up','Colour Gloss','Toning Shampoo','Purple Shampoo','Bond Builder','Keratin Treatment','Brazilian Blowout','Hair Bleach Kit',
+        // Finishing
+        'Shine Spray','Detangling Spray','Hair Growth Serum','Split End Repair Serum'
+      ],
+      bodycare: [
+        // Moisturisers
+        'Body Lotion','Body Cream','Body Butter','Body Oil','Dry Body Oil','Shea Butter','Body Gel','In-Shower Moisturiser','Body Milk',
+        // Exfoliants & Cleansers
+        'Body Scrub','Salt Scrub','Sugar Scrub','Coffee Scrub','Body Wash','Shower Gel','Shower Oil','Soap Bar','Body Foam','Exfoliating Mitt',
+        // Hands & Feet
+        'Hand Cream','Hand Lotion','Hand Sanitiser','Cuticle Cream','Foot Cream','Foot Mask','Foot Scrub','Heel Balm','Foot Soak',
+        // Deodorant & Antiperspirant
+        'Deodorant Stick','Antiperspirant Stick','Roll-On Deodorant','Deodorant Spray','Natural Deodorant','Deodorant Cream','Crystal Deodorant',
+        // Tanning & Sun
+        'Self-Tan Lotion','Self-Tan Mousse','Self-Tan Drops','Self-Tan Oil','Tanning Water','Gradual Tanner','After-Sun Lotion','After-Sun Gel','Tanning Accelerator',
+        // Bath
+        'Bath Bomb','Bath Salt','Bubble Bath','Bath Soak','Bath Oil','Bath Tablet','Bath Foam',
+        // Slimming & Firming
+        'Body Firming Cream','Anti-Cellulite Cream','Slimming Gel','Body Contouring Cream',
+        // Intimate & Specialist
+        'Stretch Mark Cream','Pregnancy Belly Balm','Intimate Wash','Body Brightening Lotion','Body SPF Lotion'
+      ]
+    };
+
+    function populateProductTypeDropdown(category) {
+      const productType = document.getElementById('productType');
+      if (!productType) return;
+      const options = productTypeOptions[category];
+      if (!options || !options.length) {
+        productType.innerHTML = '<option value="" disabled selected>No options for this category</option>';
+        productType.disabled = true;
+        return;
+      }
+      productType.innerHTML = '<option value="" disabled selected>Select product type</option>';
+      options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        productType.appendChild(el);
+      });
+      productType.disabled = false;
+    }
+
     const categoryFieldTemplates = {
       skincare: `<div class="category-field"><label for="skinType">Skin Type *</label><select id="skinType" class="form-control" required><option value="" disabled selected>Select skin type</option><option value="oily">Oily</option><option value="dry">Dry</option><option value="combination">Combination</option><option value="normal">Normal</option><option value="sensitive">Sensitive</option><option value="mature">Mature</option></select></div><div class="category-field"><label for="primaryConcern">Primary Concern *</label><select id="primaryConcern" class="form-control" required><option value="" disabled selected>Select concern</option><option value="acne">Acne / Breakouts</option><option value="aging">Aging / Wrinkles</option><option value="pigmentation">Pigmentation / Dark Spots</option><option value="dryness">Dryness</option><option value="dullness">Dullness / Uneven Tone</option><option value="sensitivity">Sensitivity</option><option value="oil-control">Oil Control</option><option value="pores">Large Pores</option></select></div>`,
       makeup: `<div class="category-field"><label for="skinType">Skin Type *</label><select id="skinType" class="form-control" required><option value="" disabled selected>Select skin type</option><option value="oily">Oily</option><option value="dry">Dry</option><option value="combination">Combination</option><option value="normal">Normal</option><option value="sensitive">Sensitive</option><option value="mature">Mature</option></select></div><div class="category-field"><label for="primaryConcern">Makeup Focus *</label><select id="primaryConcern" class="form-control" required><option value="" disabled selected>Select focus</option><option value="coverage">Coverage / Full Face</option><option value="natural">Natural Look</option><option value="bold">Bold / Dramatic</option><option value="longwear">Long-wear</option><option value="skincare">Skincare-infused</option><option value="fresh">Fresh / Lightweight</option><option value="clean">Clean Beauty</option></select></div>`,
@@ -730,7 +824,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       checkGPUConnection(); checkMLEngine();
-      productCategory.addEventListener('change', () => { updateCategoryFields(); updateDecisionLogic(); updateProfileSummary(); updateAnalyzeButtonState(); // activeBenchmarks is updated from the API response after each /predict call });
+      productCategory.addEventListener('change', () => { updateCategoryFields(); updateDecisionLogic(); updateProfileSummary(); updateAnalyzeButtonState(); populateProductTypeDropdown(productCategory.value); // activeBenchmarks is updated from the API response after each /predict call });
       occasion.addEventListener('change', () => { updateAnalyzeButtonState(); updateProfileSummary(); });
       ageRangeSelect.addEventListener('change', () => { updateDecisionLogic(); updateAnalyzeButtonState(); updateProfileSummary(); const humanAgeField = document.getElementById('humanAge'); if (humanAgeField) humanAgeField.value = ageRangeSelect.value; });
       genderSelect.addEventListener('change', () => { updateDecisionLogic(); updateAnalyzeButtonState(); updateProfileSummary(); const gd = document.getElementById('gender-disclaimer'); if (gd) gd.style.display = ['non-binary','all-genders'].includes(genderSelect.value) ? 'block' : 'none'; });
@@ -741,7 +835,7 @@
       humanOptionsSection.classList.add('hidden'); humanOptionsSection.style.display = 'none';
       const humanAgeField = document.getElementById('humanAge'); if (humanAgeField && ageRangeSelect.value) humanAgeField.value = ageRangeSelect.value;
       includeHumanFace.addEventListener('change', () => { if (includeHumanFace.checked) { humanOptionsSection.classList.remove('hidden'); humanOptionsSection.style.display = 'block'; } else { humanOptionsSection.classList.add('hidden'); humanOptionsSection.classList.add('hidden'); humanOptionsSection.style.display = 'none'; } });
-      productType.addEventListener('input', updateGenerateButtonState);
+      productType.addEventListener('change', updateGenerateButtonState);
       productColor.addEventListener('input', updateGenerateButtonState);
       sceneDescription.addEventListener('input', updateGenerateButtonState);
       brandStyleSelect.addEventListener('change', () => { updateGenerateButtonState(); onStep2SelectionChange(); });
