@@ -1,55 +1,25 @@
 /* ============================================================
    responsive.css — Cross-compatible mobile & tablet styles
    Targets: generator.html, history.html
-   Breakpoints: 480px (mobile), 768px (tablet), 1024px (laptop)
    ============================================================ */
 
 /* ─── 1. SHARED: Navbar ─────────────────────────────────── */
 @media (max-width: 768px) {
   .navbar {
     padding: 12px 16px !important;
-    flex-direction: row !important;  /* keep on one line always */
+    flex-direction: row !important;
     flex-wrap: nowrap !important;
     gap: 0 !important;
     align-items: center;
   }
-
-  .logo-wrapper {
-    flex: 1;
-  }
-
-  .logo {
-    font-size: 19px;
-    letter-spacing: 1px;
-  }
-
-  .logo-tagline {
-    font-size: 0.52rem;
-    letter-spacing: 1.2px;
-  }
-
-  .nav-menu {
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .nav-home-link {
-    font-size: 11px;
-    letter-spacing: 0.8px;
-  }
-
-  .user-profile {
-    width: 34px;
-    height: 34px;
-  }
-
-  .user-dropdown {
-    right: 12px;
-    min-width: 210px;
-    top: 58px;
-  }
+  .logo-wrapper { flex: 1; }
+  .logo { font-size: 19px; letter-spacing: 1px; }
+  .logo-tagline { font-size: 0.52rem; letter-spacing: 1.2px; }
+  .nav-menu { gap: 10px; flex-shrink: 0; }
+  .nav-home-link { font-size: 11px; letter-spacing: 0.8px; }
+  .user-profile { width: 34px; height: 34px; }
+  .user-dropdown { right: 12px; min-width: 210px; top: 58px; }
 }
-
 @media (max-width: 380px) {
   .logo-tagline { display: none; }
   .logo { font-size: 17px; }
@@ -57,49 +27,31 @@
 
 
 /* ================================================================
-   HISTORY PAGE FIXES
+   HISTORY PAGE — THE MAIN FIX
    ================================================================ */
 
-/* ─── 2a. History section wrapper ──────────────────────── */
 @media (max-width: 768px) {
   .history-section {
     padding: 20px 12px 60px !important;
   }
-
   .page-header {
     margin-bottom: 16px;
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-
-  .page-header h1 {
-    font-size: 22px;
-  }
-
-  .page-header p {
-    font-size: 12px;
-  }
-
-  .header-count {
-    font-size: 11px;
-    padding: 4px 10px;
-  }
+  .page-header h1 { font-size: 22px; }
+  .page-header p { font-size: 12px; }
+  .header-count { font-size: 11px; padding: 4px 10px; }
 }
 
-/* ─── 2b. THE CORE FIX: Force 2-column grid on mobile ─── */
-/*
-   On a ~390px screen, minmax(260px,1fr) collapses to 1 column.
-   We override to always show 2 columns on small screens,
-   so images appear as proper thumbnails, not full-bleed photos.
-*/
+/* Force 2-column grid */
 @media (max-width: 900px) {
   .history-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
   }
 }
-
 @media (max-width: 540px) {
   .history-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -107,154 +59,85 @@
   }
 }
 
-/* ─── 2c. Card thumbnail: fixed aspect ratio so images    ─
-         don't stretch into huge panels on mobile          ─ */
-.card-thumb {
-  aspect-ratio: 1 / 1;   /* square thumbnails */
-  height: unset !important;
-  overflow: hidden;
+/*
+  CRITICAL: Hard-clamp card thumbnails.
+  The image natural height overrides aspect-ratio on Android WebView.
+  Solution: give the container a real height in vw units, then
+  absolutely position the image inside so it can never push the
+  container taller.
+*/
+@media (max-width: 900px) {
+  .card-thumb {
+    height: 44vw !important;
+    max-height: 44vw !important;
+    min-height: unset !important;
+    overflow: hidden !important;
+    position: relative !important;
+    background: var(--bg-light);
+  }
+  .card-thumb img,
+  .card-thumb video,
+  .card-thumb .video-thumb {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+}
+@media (max-width: 540px) {
+  .card-thumb {
+    height: 46vw !important;
+    max-height: 46vw !important;
+  }
 }
 
-.card-thumb img,
-.card-thumb video,
-.card-thumb .video-thumb {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block;
-}
-
-/* Placeholder when no image */
-.thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: var(--bg-light);
-  color: var(--primary);
-  font-size: 12px;
-}
-
-/* ─── 2d. Card overlay: always visible on touch devices ─ */
+/* Overlay always visible on touch (no hover available) */
 @media (hover: none) {
   .card-overlay {
-    background: rgba(0, 0, 0, 0.28) !important;
+    background: rgba(0,0,0,0.28) !important;
     opacity: 1 !important;
   }
+  .history-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 @media (max-width: 768px) {
-  .overlay-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .overlay-btn svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .output-badge {
-    font-size: 9px;
-    padding: 2px 5px;
-  }
-
-  .card-info {
-    padding: 8px 10px;
-  }
-
-  .card-meta {
-    gap: 4px;
-    margin-bottom: 6px;
-  }
-
-  .meta-tag {
-    font-size: 9px;
-    padding: 2px 5px;
-  }
-
-  .card-date {
-    font-size: 10px;
-  }
-
-  .card-prompt {
-    font-size: 10px;
-    margin-top: 4px;
-  }
+  .overlay-btn { width: 32px; height: 32px; }
+  .overlay-btn svg { width: 13px; height: 13px; }
+  .output-badge { font-size: 9px; padding: 2px 5px; }
+  .card-info { padding: 8px 10px; }
+  .card-meta { gap: 4px; margin-bottom: 6px; }
+  .meta-tag { font-size: 9px; padding: 2px 5px; }
+  .card-date { font-size: 10px; }
+  .card-prompt { font-size: 10px; margin-top: 4px; }
 }
 
-
-/* ─── 2e. Lightbox on mobile ───────────────────────────── */
+/* Lightbox */
 @media (max-width: 768px) {
-  .lightbox {
-    padding: 10px;
-    align-items: flex-end;
-  }
-
-  .lightbox-inner {
-    max-height: 94vh;
-    border-radius: 0;
-  }
-
-  .lightbox-img {
-    max-height: 52vh;
-  }
-
-  .lightbox-close {
-    top: -38px;
-    font-size: 22px;
-  }
-
-  .lightbox-info {
-    padding: 12px;
-  }
-
-  .lightbox-actions {
-    gap: 8px;
-    flex-wrap: nowrap;
-  }
-
-  .lb-btn {
-    padding: 8px 14px;
-    font-size: 12px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .lightbox-prompt {
-    font-size: 11px;
-  }
+  .lightbox { padding: 10px; align-items: flex-end; }
+  .lightbox-inner { max-height: 94vh; }
+  .lightbox-img { max-height: 52vh; }
+  .lightbox-close { top: -38px; font-size: 22px; }
+  .lightbox-info { padding: 12px; }
+  .lightbox-actions { gap: 8px; flex-wrap: nowrap; }
+  .lb-btn { padding: 8px 14px; font-size: 12px; flex: 1; justify-content: center; }
+  .lightbox-prompt { font-size: 11px; }
 }
 
-
-/* ─── 2f. Delete modal ──────────────────────────────────── */
+/* Delete modal */
 @media (max-width: 480px) {
-  .modal-box {
-    padding: 26px 18px;
-    margin: 14px;
-  }
-
-  .modal-title {
-    font-size: 17px;
-  }
-
-  .modal-text {
-    font-size: 13px;
-    margin-bottom: 20px;
-  }
-
-  .modal-confirm,
-  .modal-cancel {
-    padding: 10px;
-    font-size: 13px;
-  }
+  .modal-box { padding: 26px 18px; margin: 14px; }
+  .modal-title { font-size: 17px; }
+  .modal-text { font-size: 13px; margin-bottom: 20px; }
+  .modal-confirm, .modal-cancel { padding: 10px; font-size: 13px; }
 }
 
-
-/* ─── 2g. History toast ────────────────────────────────── */
+/* Toast */
 @media (max-width: 480px) {
   .toast {
     right: 10px !important;
@@ -262,322 +145,91 @@
     bottom: 14px !important;
     transform: translateY(120px) !important;
   }
-
-  .toast.show {
-    transform: translateY(0) !important;
-  }
+  .toast.show { transform: translateY(0) !important; }
 }
 
 
 /* ================================================================
-   GENERATOR PAGE FIXES
+   GENERATOR PAGE
    ================================================================ */
 
-/* ─── 3a. Generator section ─────────────────────────────── */
 @media (max-width: 1024px) {
-  .generator-section {
-    padding: 1.5rem 4%;
-  }
-
-  .generator-container {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .preview-panel {
-    position: static !important;
-  }
+  .generator-section { padding: 1.5rem 4%; }
+  .generator-container { grid-template-columns: 1fr; gap: 1.5rem; }
+  .preview-panel { position: static !important; }
 }
-
 @media (max-width: 768px) {
-  .generator-section {
-    padding: 1rem 12px;
-  }
+  .generator-section { padding: 1rem 12px; }
+  .generator-header { flex-direction: row !important; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+  .status-badges { flex-wrap: wrap; gap: 6px; }
+  .status-badge { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+  .panel-header { padding: 0.9rem 12px; font-size: 0.75rem; }
+  .panel-content { padding: 1rem 12px; }
+  .profile-summary { padding: 0.7rem; gap: 5px; margin-bottom: 1rem; }
+  .profile-tag { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
 
-  .generator-header {
-    flex-direction: row !important;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
+  .form-grid { grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 1rem; }
+  .form-group.full-width { grid-column: span 1; }
+  .form-control, select.form-control, textarea.form-control { font-size: 16px !important; padding: 0.7rem 0.85rem; }
+  .category-fields { grid-column: span 1; grid-template-columns: 1fr; padding: 0.9rem; gap: 0.9rem; }
 
-  .status-badges {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .status-badge {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.7rem;
-  }
-}
-
-
-/* ─── 3b. Panels ─────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .panel-header {
-    padding: 0.9rem 12px;
-    font-size: 0.75rem;
-  }
-
-  .panel-content {
-    padding: 1rem 12px;
-  }
-
-  .profile-summary {
-    padding: 0.7rem;
-    gap: 5px;
-    margin-bottom: 1rem;
-  }
-
-  .profile-tag {
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
-  }
-}
-
-
-/* ─── 3c. Form grid ─────────────────────────────────────── */
-@media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 0.9rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-group.full-width {
-    grid-column: span 1;
-  }
-
-  /* Prevent iOS auto-zoom on inputs */
-  .form-control,
-  select.form-control,
-  textarea.form-control {
-    font-size: 16px !important;
-    padding: 0.7rem 0.85rem;
-  }
-
-  .category-fields {
-    grid-column: span 1;
-    grid-template-columns: 1fr;
-    padding: 0.9rem;
-    gap: 0.9rem;
-  }
-}
-
-
-/* ─── 3d. Funnel grid ───────────────────────────────────── */
-@media (max-width: 768px) {
-  .funnel-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 7px;
-  }
-
-  .funnel-card {
-    padding: 0.65rem 0.3rem;
-  }
-
+  .funnel-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+  .funnel-card { padding: 0.65rem 0.3rem; }
   .funnel-icon { font-size: 1.05rem; }
   .funnel-label { font-size: 0.66rem; }
   .funnel-desc { font-size: 0.58rem; }
-}
 
+  .btn-analyze, .btn-generate { padding: 0.95rem; font-size: 0.88rem; margin: 0.9rem 0; }
 
-/* ─── 3e. Buttons ───────────────────────────────────────── */
-@media (max-width: 768px) {
-  .btn-analyze,
-  .btn-generate {
-    padding: 0.95rem;
-    font-size: 0.88rem;
-    margin: 0.9rem 0;
-  }
-}
-
-
-/* ─── 3f. Analysis results / metrics ───────────────────── */
-@media (max-width: 768px) {
-  .analysis-results {
-    padding: 1rem;
-    margin: 1rem 0;
-  }
-
-  .metrics-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-
+  .analysis-results { padding: 1rem; margin: 1rem 0; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
   .metric-card { padding: 0.75rem; }
   .metric-value { font-size: 1.25rem; gap: 5px; }
   .metric-badge { font-size: 0.52rem; padding: 0.12rem 0.45rem; }
   .metric-label { font-size: 0.65rem; }
-  .metric-benchmark,
-  .metric-confidence { font-size: 0.6rem; }
+  .metric-benchmark, .metric-confidence { font-size: 0.6rem; }
+  .analysis-footer { flex-direction: column; gap: 4px; font-size: 0.65rem; }
 
-  .analysis-footer {
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.65rem;
-  }
-}
-
-@media (max-width: 380px) {
-  .metrics-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-/* ─── 3g. Skin tone grid ────────────────────────────────── */
-@media (max-width: 768px) {
-  .skin-tone-grid {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
-  }
-
-  .skin-tone-card {
-    padding: 0.55rem 0.15rem;
-  }
-
-  .skin-tone-circle {
-    width: 20px;
-    height: 20px;
-  }
-
+  .skin-tone-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .skin-tone-card { padding: 0.55rem 0.15rem; }
+  .skin-tone-circle { width: 20px; height: 20px; }
   .skin-tone-label { font-size: 0.56rem; }
-}
 
-
-/* ─── 3h. Aspect ratio / output type ───────────────────── */
-@media (max-width: 768px) {
-  .aspect-ratio-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-  }
-
-  .ratio-card {
-    padding: 0.7rem 0.25rem;
-  }
-
+  .aspect-ratio-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .ratio-card { padding: 0.7rem 0.25rem; }
   .ratio-label { font-size: 0.62rem; }
-
-  .output-type-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-
-  .output-card {
-    padding: 0.9rem 0.4rem;
-  }
-
+  .output-type-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .output-card { padding: 0.9rem 0.4rem; }
   .output-label { font-size: 0.78rem; }
-}
 
-@media (max-width: 380px) {
-  .aspect-ratio-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-
-/* ─── 3i. Preview panel ──────────────────────────────────── */
-@media (max-width: 768px) {
-  .preview-header {
-    padding: 0.9rem 12px;
-  }
-
+  .preview-header { padding: 0.9rem 12px; }
   .preview-header h3 { font-size: 1.15rem; }
+  .preview-content { padding: 0.9rem 12px; }
+  .preview-box { min-height: 180px; padding: 1.2rem 0.8rem; }
+  .active-profile-badge { padding: 0.55rem 0.75rem; font-size: 0.7rem; margin-bottom: 0.8rem; }
+  .decision-mapping { font-size: 0.68rem; padding: 0.55rem 0.75rem; }
 
-  .preview-content {
-    padding: 0.9rem 12px;
-  }
-
-  .preview-box {
-    min-height: 180px;
-    padding: 1.2rem 0.8rem;
-  }
-
-  .active-profile-badge {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.7rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .decision-mapping {
-    font-size: 0.68rem;
-    padding: 0.55rem 0.75rem;
-  }
-}
-
-
-/* ─── 3j. Ad text cards ─────────────────────────────────── */
-@media (max-width: 768px) {
-  .ad-text-grid {
-    padding: 0.9rem;
-    gap: 0.75rem;
-  }
-
-  .ad-text-card {
-    padding: 0.8rem;
-  }
-
+  .ad-text-grid { padding: 0.9rem; gap: 0.75rem; }
+  .ad-text-card { padding: 0.8rem; }
   .card-content { font-size: 0.88rem; padding-right: 2rem; }
   .card-content.hook { font-size: 0.92rem; }
   .card-content.headline { font-size: 0.98rem; }
   .card-content.cta { font-size: 0.92rem; }
+  .copy-btn { width: 26px; height: 26px; top: 0.75rem; right: 0.75rem; }
 
-  .copy-btn {
-    width: 26px;
-    height: 26px;
-    top: 0.75rem;
-    right: 0.75rem;
-  }
-}
+  .action-buttons { grid-template-columns: 1fr; gap: 7px; }
+  .btn-action { padding: 0.7rem; font-size: 0.8rem; }
 
-
-/* ─── 3k. Action buttons ────────────────────────────────── */
-@media (max-width: 768px) {
-  .action-buttons {
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-
-  .btn-action {
-    padding: 0.7rem;
-    font-size: 0.8rem;
-  }
-}
-
-
-/* ─── 3l. ML degraded banner ────────────────────────────── */
-@media (max-width: 768px) {
-  #mlDegradedBanner {
-    font-size: 0.78rem !important;
-    padding: 9px 11px !important;
-    gap: 7px !important;
-  }
-}
-
-
-/* ─── 3m. Visual strategy sections ─────────────────────── */
-@media (max-width: 768px) {
-  .visual-strategy-section,
-  .step2-rec-section {
-    padding: 0.9rem;
-  }
-
+  #mlDegradedBanner { font-size: 0.78rem !important; padding: 9px 11px !important; gap: 7px !important; }
+  .visual-strategy-section, .step2-rec-section { padding: 0.9rem; }
   .visual-strategy-item-text { font-size: 0.78rem; }
-  .step2-rec-chips { gap: 7px; }
-  .step2-rec-chip { padding: 5px 9px; }
-  .step2-rec-reason { font-size: 0.75rem; }
-}
-
-
-/* ─── 3n. Loading stages ────────────────────────────────── */
-@media (max-width: 768px) {
   .loading-stages { padding: 0.9rem; }
   .loading-stage { font-size: 0.8rem; padding: 5px 0; }
+}
+
+@media (max-width: 380px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .aspect-ratio-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 
@@ -585,59 +237,23 @@
    SHARED
    ================================================================ */
 
-/* ─── 4. Footer ─────────────────────────────────────────── */
 @media (max-width: 480px) {
-  footer {
-    padding: 18px 12px;
-  }
-
+  footer { padding: 18px 12px; }
   .footer-copyright { font-size: 12px; }
 }
 
-/* ─── 5. Touch-device interaction states ───────────────── */
 @media (hover: none) {
-  .funnel-card:active,
-  .ratio-card:active,
-  .output-card:active,
-  .skin-tone-card:active,
-  .btn-analyze:active,
-  .btn-generate:active,
-  .history-card:active {
-    opacity: 0.82;
-  }
-
-  /* Disable shimmer on touch */
-  .btn-analyze:hover::before {
-    display: none;
-  }
-
-  /* Disable hover lift on cards */
-  .history-card:hover {
-    transform: none;
-    box-shadow: none;
-  }
+  .btn-analyze:hover::before { display: none; }
+  .funnel-card:active, .ratio-card:active, .output-card:active,
+  .skin-tone-card:active, .btn-analyze:active, .btn-generate:active { opacity: 0.82; }
 }
 
-/* ─── 6. Safe area insets (notched phones) ──────────────── */
 @supports (padding: env(safe-area-inset-bottom)) {
-  footer {
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  }
+  footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 }
 
-/* ─── 7. Tiny screens (320–360px) ──────────────────────── */
 @media (max-width: 360px) {
-  .generator-section,
-  .history-section {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-  }
-
-  .panel-content {
-    padding: 0.75rem 8px;
-  }
-
-  .history-grid {
-    gap: 6px !important;
-  }
+  .generator-section, .history-section { padding-left: 8px !important; padding-right: 8px !important; }
+  .panel-content { padding: 0.75rem 8px; }
+  .history-grid { gap: 6px !important; }
 }
