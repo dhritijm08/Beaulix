@@ -219,6 +219,7 @@
     .card-content.cta { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
     .copy-btn { position: absolute; top: 1rem; right: 1rem; background: white; border: 1px solid var(--border); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); }
     .copy-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .copy-btn.copied { border-color: #22c55e; color: #22c55e; background: #f0fdf4; }
     .copy-btn svg { width: 14px; height: 14px; stroke: currentColor; }
     .targeting-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border); }
     .targeting-label { font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }

@@ -854,6 +854,24 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+      // Delegated handler for all copy buttons
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.copy-btn');
+        if (!btn) return;
+        const targetId = btn.dataset.copyTarget;
+        if (!targetId) return;
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const text = el.textContent.trim();
+        if (!text || text === '-') { showToast('Nothing to copy yet', 'error'); return; }
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            showToast('Copied!', 'success');
+            btn.classList.add('copied');
+            setTimeout(() => btn.classList.remove('copied'), 1500);
+          })
+          .catch(() => showToast('Failed to copy', 'error'));
+      });
       checkGPUConnection(); checkMLEngine();
       productCategory.addEventListener('change', () => { updateCategoryFields(); updateDecisionLogic(); updateProfileSummary(); updateAnalyzeButtonState(); populateProductTypeDropdown(productCategory.value); // activeBenchmarks is updated from the API response after each /predict call });
       occasion.addEventListener('change', () => { updateAnalyzeButtonState(); updateProfileSummary(); });
