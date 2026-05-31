@@ -601,7 +601,38 @@
       const lightingMap = {'':'clean studio lighting','luxury-elegant':'cinematic lighting, elegant','modern-minimalist':'bright studio lighting, minimal','bold-vibrant':'vibrant colorful lighting','natural-organic':'soft natural light','glam-dramatic':'dramatic glamour lighting','soft-romantic':'soft diffused light'};
       const funnelLightMap = {awareness:'soft morning light',consideration:'clinical detailed lighting',conversion:'dramatic product lighting',retention:'warm lifestyle lighting'};
       const skinToneMap = {fair:'fair skin',light:'light skin',medium:'medium skin tone',tan:'tan skin',deep:'deep skin tone'};
-      const actionMap = {serum:'applying serum to face with dropper',moisturizer:'applying moisturizer to face',cream:'applying cream to face',oil:'applying oil to face',lotion:'applying lotion to skin',cleanser:'washing face with cleanser',foundation:'applying foundation with brush',lipstick:'applying lipstick to lips',perfume:'spraying perfume on neck',shampoo:'washing hair with shampoo'};
+      const actionMap = {
+        // Serums & treatments
+        'serum':'applying serum to face with dropper','ampoule':'applying ampoule serum to face','booster':'applying booster drops to face',
+        // Moisturisers
+        'moisturiser':'applying moisturiser to face','moisturizer':'applying moisturizer to face','cream':'applying cream to face','day cream':'applying day cream to face','night cream':'applying night cream to face','water cream':'applying water cream to face','sleeping mask':'applying overnight sleeping mask','sleeping pack':'applying sleeping pack to face',
+        // Cleansers
+        'cleanser':'washing face with cleanser','cleansing oil':'massaging cleansing oil onto face','cleansing balm':'massaging cleansing balm onto face','foam cleanser':'foaming cleanser on face','gel cleanser':'applying gel cleanser to face','micellar water':'removing makeup with micellar water on cotton pad','cleansing wipes':'wiping face with cleansing wipe','makeup remover':'removing makeup with cotton pad',
+        // Toners & essences
+        'toner':'patting toner onto face with hands','essence':'patting essence onto face','facial mist':'misting face with facial spray',
+        // Oils & butters
+        'face oil':'pressing face oil between palms applying to face','body oil':'applying body oil to smooth skin','body butter':'scooping body butter applying to skin',
+        // Masks
+        'sheet mask':'applying sheet mask to face','clay mask':'applying clay mask to face','peel-off mask':'peeling off mask from face','mud mask':'applying mud mask to face','exfoliating mask':'applying exfoliating mask','chemical exfoliant':'applying chemical exfoliant to skin','physical scrub':'scrubbing face with exfoliant','enzyme powder':'foaming enzyme powder cleanser on face',
+        // SPF
+        'sunscreen':'applying sunscreen to face','tinted sunscreen':'blending tinted sunscreen on face','spf moisturiser':'applying spf moisturiser to face',
+        // Eye & lip
+        'eye cream':'dabbing eye cream under eyes','eye gel':'dabbing eye gel under eyes','eye serum':'applying eye serum with fingertip','lip balm':'applying lip balm to lips','lip mask':'applying lip mask to lips','lip treatment':'applying lip treatment to lips','lip scrub':'scrubbing lips with lip scrub',
+        // Makeup — face
+        'foundation':'applying foundation with brush to face','concealer':'applying concealer under eyes','bb cream':'blending bb cream on face','cc cream':'blending cc cream on face','tinted moisturiser':'blending tinted moisturiser on face','primer':'applying primer to face','setting powder':'dusting setting powder over face','setting spray':'misting setting spray over face','blush':'brushing blush on cheekbones','bronzer':'sweeping bronzer on cheeks','contour':'contouring cheekbones with brush','highlighter':'applying highlighter to cheekbones',
+        // Makeup — eyes
+        'eyeshadow':'blending eyeshadow on eyelid','eyeliner':'applying eyeliner to eye','mascara':'applying mascara to lashes','brow':'filling in brows with pencil','false lashes':'applying false lashes','lash serum':'applying lash serum to lash line',
+        // Makeup — lips
+        'lipstick':'applying lipstick to lips','lip gloss':'applying lip gloss to lips','liquid lipstick':'applying liquid lipstick to lips','lip liner':'lining lips with lip liner','lip stain':'applying lip stain to lips','lip plumper':'applying lip plumper to lips','lip oil':'applying lip oil to lips',
+        // Fragrance
+        'parfum':'spraying perfume on neck and wrist','eau de parfum':'spraying eau de parfum on neck','eau de toilette':'spraying eau de toilette on neck','eau de cologne':'spraying cologne on neck','perfume':'spraying perfume on neck','body mist':'spraying body mist on skin','hair mist':'misting hair mist over hair','roll-on perfume':'rolling perfume on wrist',
+        // Haircare
+        'shampoo':'washing hair with shampoo, lathering','conditioner':'applying conditioner to wet hair','hair mask':'applying hair mask to hair','scalp serum':'applying scalp serum with dropper to parted hair','scalp scrub':'massaging scalp scrub into scalp','dry shampoo':'spraying dry shampoo at roots','heat protectant':'spraying heat protectant on hair before styling','curl cream':'scrunching curl cream into curly hair','curl gel':'applying gel to curly hair','hair oil':'applying hair oil to ends of hair','hair serum':'smoothing hair serum through hair',
+        // Bodycare
+        'body lotion':'applying body lotion to legs','body cream':'applying body cream to arms','lotion':'applying lotion to skin','body scrub':'scrubbing body scrub on skin','hand cream':'applying hand cream to hands','foot cream':'applying foot cream to feet','self-tan':'applying self-tan lotion to legs','bath bomb':'dropping bath bomb into bath','deodorant':'applying deodorant to underarm',
+        // Fallbacks
+        'oil':'applying oil to skin','lotion':'applying lotion to skin','balm':'applying balm'
+      };
       const parts = [];
       const productSubject = productColorVal ? `${productColorVal} ${productTypeVal}` : productTypeVal;
       if (includeHuman && productTypeVal) {
@@ -612,7 +643,7 @@
         const genderWord = hg==='woman'?'woman':hg==='man'?'man':'person';
         const humanDesc = [hr, genderWord, skinToneMap[st]||'', ha?`age ${ha}`:''].filter(Boolean).join(' ');
         const pl = productTypeVal.toLowerCase();
-        const matchedAction = Object.entries(actionMap).find(([k]) => pl.includes(k));
+        const matchedAction = Object.entries(actionMap).sort((a,b)=>b[0].length-a[0].length).find(([k]) => pl.includes(k));
         parts.push(`${productSubject} held by ${humanDesc}, ${matchedAction?matchedAction[1]:`holding ${productTypeVal}`}`);
       } else if (productTypeVal) {
         parts.push(`${productSubject}, studio hero shot, isolated`);
@@ -731,11 +762,11 @@
       document.getElementById('mappingConcern').textContent = primaryAttr||'-';
       document.getElementById('mappingSkin').textContent = secondaryAttr||'-';
       let scene='', badge=productTypeVal||'Product';
-      if (category==='fragrance'){scene='Luxury fragrance';badge='Luxury Scent';}
-      else if (category==='haircare'){scene='Hair care';badge='Hair Solution';}
-      else if (category==='bodycare'){scene='Body care';badge='Body Care';}
-      else if (category==='makeup'){scene='Makeup';badge='Makeup Look';}
-      else{scene='Skincare';badge=productTypeVal||'Skincare';}
+      if (category==='fragrance'){scene='Luxury fragrance';}
+      else if (category==='haircare'){scene='Hair care';}
+      else if (category==='bodycare'){scene='Body care';}
+      else if (category==='makeup'){scene='Makeup';}
+      else{scene='Skincare';}
       if (occasionVal==='gym') scene='Post-workout active';
       else if (occasionVal==='party') scene+=' · Evening glam';
       else if (occasionVal==='wedding') scene+=' · Bridal';
