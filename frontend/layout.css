@@ -323,10 +323,20 @@ footer {
   .navbar .nav-menu.nav-compact {
     flex-direction: row;
     flex-wrap: nowrap;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
     gap: 10px;
     align-items: center;
-    width: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;          /* Firefox */
+    -ms-overflow-style: none;       /* IE/Edge */
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px;            /* prevents clipping box-shadow on focus */
+  }
+
+  .navbar .nav-menu.nav-compact::-webkit-scrollbar {
+    display: none;                  /* Chrome/Safari */
   }
 
   .navbar .nav-menu.nav-compact .nav-home-link {
@@ -346,4 +356,11 @@ footer {
   .logo { font-size: 18px; letter-spacing: 1.2px; }
   .logo-tagline { font-size: 0.52rem; letter-spacing: 0.9px; line-height: 1.4; }
   .nav-links a, .login-link { font-size: 10px; letter-spacing: 0.8px; }
+}
+
+/* ── nav-compact: keep links from wrapping/shrinking when nav scrolls ── */
+.navbar .nav-menu.nav-compact .nav-home-link,
+.navbar .nav-menu.nav-compact .user-profile {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
