@@ -1,0 +1,701 @@
+/* ============================================================
+   responsive.css — Cross-compatible mobile & tablet styles
+   Targets: generator.html, history.html
+   Breakpoints: 480px (mobile), 768px (tablet), 1024px (laptop)
+   ============================================================ */
+
+/* ─── 1. SHARED: Navbar ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 14px 16px;
+    flex-direction: row;       /* keep logo + icons on one line */
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+
+  .logo-wrapper {
+    flex: 1;
+  }
+
+  .logo {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .logo-tagline {
+    font-size: 0.55rem;
+    letter-spacing: 1.2px;
+  }
+
+  .nav-menu {
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .nav-home-link {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .user-dropdown {
+    right: 12px;
+    min-width: 220px;
+    top: 62px;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo {
+    font-size: 17px;
+  }
+  .logo-tagline {
+    display: none;
+  }
+}
+
+
+/* ─── 2. GENERATOR: Section padding ─────────────────────── */
+@media (max-width: 1024px) {
+  .generator-section {
+    padding: 1.5rem 4%;
+  }
+  .generator-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .preview-panel {
+    position: static !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .generator-section {
+    padding: 1rem 12px;
+  }
+
+  .generator-header {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .status-badges {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.7rem;
+  }
+}
+
+
+/* ─── 3. GENERATOR: Panels ───────────────────────────────── */
+@media (max-width: 768px) {
+  .panel-header {
+    padding: 1rem 14px;
+    font-size: 0.78rem;
+  }
+
+  .panel-content {
+    padding: 1rem 14px;
+  }
+
+  .profile-summary {
+    padding: 0.8rem;
+    gap: 6px;
+  }
+
+  .profile-tag {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.6rem;
+  }
+}
+
+
+/* ─── 4. GENERATOR: Form grid ───────────────────────────── */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+
+  .form-control {
+    padding: 0.75rem 0.85rem;
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
+
+  select.form-control {
+    font-size: 16px;
+  }
+
+  textarea.form-control {
+    font-size: 16px;
+  }
+
+  .category-fields {
+    grid-column: span 1;
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+
+
+/* ─── 5. GENERATOR: Funnel grid ──────────────────────────── */
+@media (max-width: 768px) {
+  .funnel-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .funnel-card {
+    padding: 0.7rem 0.3rem;
+  }
+
+  .funnel-icon {
+    font-size: 1.1rem;
+  }
+
+  .funnel-label {
+    font-size: 0.68rem;
+  }
+
+  .funnel-desc {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .funnel-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+
+/* ─── 6. GENERATOR: Analyze button ──────────────────────── */
+@media (max-width: 768px) {
+  .btn-analyze {
+    padding: 1rem;
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+
+  .btn-generate {
+    padding: 1rem;
+    font-size: 0.9rem;
+    margin: 1rem 0;
+  }
+}
+
+
+/* ─── 7. GENERATOR: Analysis results ────────────────────── */
+@media (max-width: 768px) {
+  .analysis-results {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .metric-card {
+    padding: 0.8rem;
+  }
+
+  .metric-value {
+    font-size: 1.3rem;
+    gap: 6px;
+  }
+
+  .metric-badge {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .metric-label {
+    font-size: 0.68rem;
+  }
+
+  .metric-benchmark,
+  .metric-confidence {
+    font-size: 0.62rem;
+  }
+
+  .analysis-footer {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 400px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* ─── 8. GENERATOR: Visual strategy ─────────────────────── */
+@media (max-width: 768px) {
+  .visual-strategy-section {
+    padding: 1rem;
+  }
+
+  .visual-strategy-item-text {
+    font-size: 0.8rem;
+  }
+
+  .step2-rec-section {
+    padding: 1rem;
+  }
+
+  .step2-rec-chips {
+    gap: 8px;
+  }
+
+  .step2-rec-chip {
+    padding: 6px 10px;
+  }
+}
+
+
+/* ─── 9. GENERATOR: Skin tone grid ──────────────────────── */
+@media (max-width: 768px) {
+  .skin-tone-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .skin-tone-card {
+    padding: 0.6rem 0.2rem;
+  }
+
+  .skin-tone-circle {
+    width: 22px;
+    height: 22px;
+  }
+
+  .skin-tone-label {
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .skin-tone-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+
+/* ─── 10. GENERATOR: Aspect ratio & output type ──────────── */
+@media (max-width: 768px) {
+  .aspect-ratio-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .ratio-card {
+    padding: 0.75rem 0.3rem;
+  }
+
+  .ratio-label {
+    font-size: 0.65rem;
+  }
+
+  .output-type-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .output-card {
+    padding: 1rem 0.5rem;
+  }
+
+  .output-label {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .aspect-ratio-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+/* ─── 11. GENERATOR: Preview panel ──────────────────────── */
+@media (max-width: 768px) {
+  .preview-header {
+    padding: 1rem 14px;
+  }
+
+  .preview-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .preview-content {
+    padding: 1rem 14px;
+  }
+
+  .preview-box {
+    min-height: 200px;
+    padding: 1.5rem 1rem;
+  }
+
+  .active-profile-badge {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .decision-mapping {
+    font-size: 0.7rem;
+    padding: 0.6rem 0.8rem;
+  }
+}
+
+
+/* ─── 12. GENERATOR: Ad text cards ──────────────────────── */
+@media (max-width: 768px) {
+  .ad-text-header {
+    padding: 0.9rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .ad-text-grid {
+    padding: 1rem;
+    gap: 0.8rem;
+  }
+
+  .ad-text-card {
+    padding: 0.85rem 0.85rem 0.85rem 0.85rem;
+  }
+
+  .card-content {
+    font-size: 0.9rem;
+    padding-right: 2.2rem;
+  }
+
+  .card-content.hook {
+    font-size: 0.95rem;
+  }
+
+  .card-content.headline {
+    font-size: 1rem;
+  }
+
+  .card-content.cta {
+    font-size: 0.95rem;
+  }
+}
+
+
+/* ─── 13. GENERATOR: Action buttons ─────────────────────── */
+@media (max-width: 768px) {
+  .action-buttons {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .btn-action {
+    padding: 0.75rem;
+    font-size: 0.82rem;
+  }
+}
+
+
+/* ─── 14. GENERATOR: Loading stages ─────────────────────── */
+@media (max-width: 768px) {
+  .loading-stages {
+    padding: 1rem;
+  }
+
+  .loading-stage {
+    font-size: 0.82rem;
+    padding: 6px 0;
+  }
+}
+
+
+/* ─── 15. GENERATOR: ML degraded banner ─────────────────── */
+@media (max-width: 768px) {
+  #mlDegradedBanner {
+    font-size: 0.8rem !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+}
+
+
+/* ─── 16. HISTORY: Section + header ─────────────────────── */
+@media (max-width: 768px) {
+  .history-section {
+    padding: 32px 14px 60px !important;
+  }
+
+  .page-header {
+    margin-bottom: 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+  }
+
+  .header-count {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+}
+
+
+/* ─── 17. HISTORY: Grid layout ──────────────────────────── */
+@media (max-width: 900px) {
+  .history-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .history-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* ─── 18. HISTORY: Cards ────────────────────────────────── */
+@media (max-width: 768px) {
+  .history-card {
+    /* Always show overlay controls on touch devices */
+  }
+
+  /* Make overlay always visible on mobile (no hover) */
+  @media (hover: none) {
+    .card-overlay {
+      background: rgba(0,0,0,0.3) !important;
+      opacity: 1 !important;
+    }
+
+    .overlay-btn {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  .card-info {
+    padding: 10px 12px;
+  }
+
+  .meta-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .card-date {
+    font-size: 11px;
+  }
+
+  .card-prompt {
+    font-size: 11px;
+  }
+
+  .output-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+}
+
+
+/* ─── 19. HISTORY: Lightbox ─────────────────────────────── */
+@media (max-width: 768px) {
+  .lightbox {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .lightbox-inner {
+    max-height: 92vh;
+  }
+
+  .lightbox-img {
+    max-height: 55vh;
+  }
+
+  .lightbox-close {
+    top: -36px;
+    font-size: 24px;
+  }
+
+  .lightbox-info {
+    padding: 12px;
+  }
+
+  .lightbox-actions {
+    gap: 8px;
+  }
+
+  .lb-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .lightbox-prompt {
+    font-size: 12px;
+  }
+}
+
+
+/* ─── 20. HISTORY: Delete modal ─────────────────────────── */
+@media (max-width: 480px) {
+  .modal-box {
+    padding: 28px 20px;
+    margin: 14px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+  }
+
+  .modal-text {
+    font-size: 13px;
+  }
+
+  .modal-confirm,
+  .modal-cancel {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+
+/* ─── 21. HISTORY: Empty state ──────────────────────────── */
+@media (max-width: 480px) {
+  .empty-state {
+    padding: 60px 16px;
+  }
+
+  .empty-state h2 {
+    font-size: 20px;
+  }
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .go-generate-btn {
+    padding: 12px 24px;
+    font-size: 13px;
+  }
+}
+
+
+/* ─── 22. HISTORY: Toast ────────────────────────────────── */
+@media (max-width: 480px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    bottom: 14px;
+    font-size: 13px;
+    transform: translateY(100px);
+  }
+
+  .toast.show {
+    transform: translateY(0);
+  }
+}
+
+
+/* ─── 23. SHARED: Footer ────────────────────────────────── */
+@media (max-width: 480px) {
+  footer {
+    padding: 20px 14px;
+  }
+
+  .footer-copyright {
+    font-size: 12px;
+  }
+}
+
+
+/* ─── 24. Touch-device tap highlights ───────────────────── */
+@media (hover: none) {
+  .funnel-card:active,
+  .ratio-card:active,
+  .output-card:active,
+  .skin-tone-card:active,
+  .btn-analyze:active,
+  .btn-generate:active {
+    opacity: 0.85;
+  }
+
+  /* Remove hover transforms on touch */
+  .history-card:hover {
+    transform: none;
+  }
+
+  .btn-analyze:hover::before {
+    display: none;
+  }
+}
+
+
+/* ─── 25. Safe area for notched phones ──────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  footer {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .navbar {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+}
+
+
+/* ─── 26. Very small screens (320px) ────────────────────── */
+@media (max-width: 360px) {
+  .generator-section {
+    padding: 0.8rem 10px;
+  }
+
+  .panel-content {
+    padding: 0.8rem 10px;
+  }
+
+  .funnel-label {
+    font-size: 0.6rem;
+  }
+
+  .funnel-icon {
+    font-size: 1rem;
+  }
+}
