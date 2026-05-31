@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="layout.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { max-width:100%; overflow-x:hidden; }
     ::selection { background-color:rgba(201,164,107,0.3); color:#000; }
     body { font-family:'Inter',sans-serif; background:linear-gradient(#fff,var(--bg-light)); color:var(--text-dark); min-height:100vh; display:flex; flex-direction:column; visibility:hidden; }
 
@@ -53,16 +54,47 @@
     .go-generate-btn { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; background:linear-gradient(135deg,var(--primary-light),var(--primary)); color:white; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:0.8px; transition:all 0.3s; }
     .go-generate-btn:hover { background:linear-gradient(135deg,#A59990,#7B5940); transform:translateY(-2px); box-shadow:0 8px 25px rgba(140,106,74,0.4); }
 
-    .history-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
 
-    .history-card { background:white; border:1px solid var(--border); position:relative; transition:transform 0.3s,box-shadow 0.3s; }
+    .history-card { background:white; position:relative; transition:transform 0.3s,box-shadow 0.3s; }
     .history-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(140,106,74,0.15); }
 
-    .card-thumb { position:relative; width:100%; height:180px; overflow:hidden; background:var(--bg-light); }
-    .card-thumb img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
-    .card-thumb .video-thumb { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
-    .card-thumb video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
-    .thumb-placeholder { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:var(--bg-light); color:var(--primary); font-size:11px; }
+    /* Matches index.html .img-box style exactly */
+    .card-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: block;
+    }
+    .card-thumb img,
+    .card-thumb video,
+    .card-thumb .video-thumb {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .thumb-placeholder {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--bg-light);
+      color: var(--primary);
+      font-size: 13px;
+    }
     .output-badge { position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.65); color:white; font-size:10px; font-weight:600; padding:3px 8px; letter-spacing:0.5px; text-transform:uppercase; }
     .card-overlay { position:absolute; inset:0; background:rgba(0,0,0,0); display:flex; align-items:center; justify-content:center; gap:8px; opacity:0; transition:all 0.3s; }
     .history-card:hover .card-overlay { background:rgba(0,0,0,0.45); opacity:1; }
@@ -75,11 +107,13 @@
     .overlay-btn.delete { background:#ef4444; }
     .overlay-btn.delete svg { stroke:white; }
 
-    .card-info { padding:14px 16px; }
-    .card-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-    .meta-tag { background:var(--bg-light); color:var(--primary); border:1px solid var(--border); padding:3px 8px; font-size:11px; font-weight:600; text-transform:capitalize; letter-spacing:0.3px; }
-    .card-date { font-size:12px; color:var(--primary-light); }
-    .card-prompt { font-size:12px; color:var(--text-light); margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* Matches index.html .gallery-heading style */
+    .card-info { padding:10px 0 4px 0; }
+    .card-heading { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:#111; margin-bottom:2px; }
+    .card-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+    .meta-tag { font-size:0.6rem; background:var(--border); padding:0.2rem 0.8rem; color:#4a2c2c; font-weight:600; letter-spacing:0.3px; }
+    .card-date { color:var(--primary); font-weight:400; font-size:0.8rem; display:block; margin-bottom:4px; }
+    .card-prompt { font-size:12px; color:var(--text-light); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
 
     .lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; display:none; align-items:center; justify-content:center; padding:20px; }
     .lightbox.show { display:flex; }
@@ -117,12 +151,35 @@
     footer { background:#111; color:white; padding:30px 20px; text-align:center; }
     .footer-copyright { color:var(--text-light); font-size:14px; }
 
-    @media (max-width:768px) { .navbar { padding:12px 16px !important; flex-direction:row !important; flex-wrap:nowrap !important; } .logo { font-size:19px; } .logo-tagline { font-size:0.52rem; } .nav-menu { gap:10px; } .nav-home-link { font-size:11px; } .history-section { padding:20px 12px 60px; } .history-grid { grid-template-columns:repeat(2,1fr); gap:10px; } .card-thumb { height:44vw; } }
-    @media (max-width:480px) { .history-grid { grid-template-columns:repeat(2,1fr); gap:8px; } .card-thumb { height:46vw; } .page-header h1 { font-size:20px; } }
+    /* ── Responsive breakpoints ── */
+    @media (max-width: 1100px) {
+      .history-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    }
+    @media (max-width: 900px) {
+      .navbar { padding: 12px 20px !important; }
+      .history-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    }
+    @media (max-width: 768px) {
+      /* navbar handled by layout.css */
+      .history-section { padding: 20px 16px 60px; }
+      .history-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    }
+    @media (max-width: 480px) {
+      .history-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .page-header h1 { font-size: 20px; }
+      .card-heading { font-size: 0.85rem; }
+      .card-date { font-size: 0.72rem; }
+    }
+    @media (max-width: 360px) {
+      .history-grid { grid-template-columns: 1fr; gap: 10px; }
+    }
 
-    /* Touch devices: always show overlay buttons */
+    /* Touch devices: show overlay only on tap */
     @media (hover: none) {
-      .card-overlay { background:rgba(0,0,0,0.28) !important; opacity:1 !important; }
+      .card-overlay { background:rgba(0,0,0,0) !important; opacity:0 !important; transition: opacity 0.2s, background 0.2s; }
+      .history-card.overlay-active .card-overlay { background:rgba(0,0,0,0.45) !important; opacity:1 !important; }
+      .history-card:hover { transform:none; box-shadow:none; }
+    }
       .history-card:hover { transform:none; box-shadow:none; }
     }
   </style>
@@ -173,7 +230,7 @@
     <div class="logo">BEAULIX</div>
     <span class="logo-tagline">Decision Intelligence for Beauty Ads</span>
   </div>
-  <div class="nav-menu">
+  <div class="nav-menu nav-compact">
     <a href="index.html" class="nav-home-link">Home</a>
     <a href="generator.html" class="nav-home-link">Generator</a>
     <div class="user-profile" id="userProfile" role="button" aria-label="User menu" tabindex="0">
@@ -209,9 +266,31 @@
   <div id="historyContainer"></div>
 </section>
 
+<style>
+  /* FORCE square cards — overrides cached CSS */
+  #historyGrid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 24px !important;
+    width: 100% !important;
+  }
+  @media (max-width: 900px) {
+    #historyGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+  }
+  @media (max-width: 480px) {
+    #historyGrid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  }
+  .history-card { width: 100% !important; min-width: 0 !important; }
+  .card-thumb { box-sizing: border-box !important; }
+  .card-thumb img, .card-thumb video {
+    width: 100% !important; height: 100% !important;
+    object-fit: cover !important; display: block !important;
+  }
+</style>
+
 <footer><div class="footer-copyright">© 2026 Beaulix. All rights reserved.</div></footer>
 
-<script type="module" src="history-module.js"></script>
+<!-- v4 --><script type="module" src="history-module.js"></script>
 
 </body>
 </html>

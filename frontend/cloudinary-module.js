@@ -116,7 +116,7 @@ export function initCloudinaryModule({ app, currentUserIdRef, ngrokHeaders, debu
         try { cloudinaryUrl = await uploadToCloudinary(blob, true, debug); }
         catch (e) { console.warn('⚠️ Cloudinary video upload failed:', e.message); }
         imageData = cloudinaryUrl
-          ? cloudinaryUrl.replace('/upload/', '/upload/so_0.5,w_480,f_jpg/').replace(/\.mp4$/, '.jpg')
+          ? cloudinaryUrl.replace('/upload/', '/upload/so_0.5,w_480,h_480,c_fill,f_jpg/').replace(/\.mp4$/, '.jpg')
           : await extractVideoThumbnail(blob);
         if (debug) console.log('🖼 Video thumbnail:', cloudinaryUrl ? 'from Cloudinary' : 'from canvas');
       } else {
@@ -124,7 +124,7 @@ export function initCloudinaryModule({ app, currentUserIdRef, ngrokHeaders, debu
         try { cloudinaryUrl = await uploadToCloudinary(blob, false, debug); }
         catch (e) { console.warn('⚠️ Cloudinary image upload failed:', e.message); }
         imageData = cloudinaryUrl
-          ? cloudinaryUrl.replace('/upload/', '/upload/w_480,c_limit,f_jpg,q_70/')
+          ? cloudinaryUrl.replace('/upload/', '/upload/w_480,h_480,c_fill,f_jpg,q_70/')
           : await compressImageToBase64(blob);
         if (debug) console.log('🖼 Image:', cloudinaryUrl ? 'uploaded to Cloudinary' : 'compressed to base64');
       }

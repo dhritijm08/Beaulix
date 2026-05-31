@@ -245,7 +245,7 @@
     <div class="logo">BEAULIX</div>
     <span class="logo-tagline">Decision Intelligence for Beauty Ads</span>
   </div>
-  <div class="nav-menu">
+  <div class="nav-menu" id="desktopNav">
     <div class="nav-links">
       <a href="#hero">Home</a>
       <a href="#how">How It Works</a>
@@ -400,7 +400,28 @@
 <canvas id="thumbCanvas" style="display:none;"></canvas>
 
 <script src="index-init.js"></script>
-
 <script type="module" src="index-module.js"></script>
+<script>
+  // Hamburger menu toggle
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const mobileNav = document.getElementById('mobileNav');
+  const mobileNavClose = document.getElementById('mobileNavClose');
+
+  hamburgerBtn.addEventListener('click', () => {
+    hamburgerBtn.classList.toggle('open');
+    mobileNav.classList.toggle('open');
+  });
+  mobileNavClose.addEventListener('click', () => {
+    hamburgerBtn.classList.remove('open');
+    mobileNav.classList.remove('open');
+  });
+  // Close on link click
+  document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburgerBtn.classList.remove('open');
+      mobileNav.classList.remove('open');
+    });
+  });
+</script>
 </body>
 </html>

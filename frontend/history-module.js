@@ -69,20 +69,25 @@
 
       const isVideo = item.outputType === 'video';
       // imageData is now a Cloudinary thumbnail URL or base64 fallback
-      const imgSrc = item.imageData && item.imageData !== 'video' && item.imageData !== ''
+      // Force square crop on Cloudinary URLs (fixes old non-square thumbnails)
+      let imgSrc = item.imageData && item.imageData !== 'video' && item.imageData !== ''
         ? item.imageData : null;
+      if (imgSrc && imgSrc.includes('cloudinary.com') && imgSrc.includes('/upload/')) {
+        // Replace any existing transformation or add square crop
+        imgSrc = imgSrc.replace(/\/upload\/[^/]*\//, '/upload/w_480,h_480,c_fill,f_jpg,q_70/');
+      }
 
       const thumbHtml = imgSrc
-        ? `<img src="${imgSrc}" alt="Generated visual" loading="lazy" />`
-        : `<div class="thumb-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>${isVideo ? 'Video' : 'No preview'}</span></div>`;
+        ? `<img src="${imgSrc}" alt="Generated visual" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+        : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--bg-light);color:var(--primary);font-size:13px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>${isVideo ? 'Video' : 'No preview'}</span></div>`;
 
       const tags = [item.category, item.funnel, item.aspectRatio].filter(Boolean);
 
       card.innerHTML = `
-        <div class="card-thumb">
-          ${thumbHtml}
-          <span class="output-badge">${isVideo ? '▶ Video' : '🖼 Image'}</span>
-          <div class="card-overlay">
+        <div class="card-thumb" style="position:relative;width:100%;padding-bottom:100%;overflow:hidden;background:var(--bg-light);border:1px solid var(--border);">
+          <div style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;">${thumbHtml}</div>
+          <span class="output-badge" style="position:absolute;top:8px;left:8px;z-index:2;">${isVideo ? '▶ Video' : '🖼 Image'}</span>
+          <div class="card-overlay" style="position:absolute;inset:0;z-index:3;">
             <button class="overlay-btn view" title="View" data-action="view" data-id="${item.id}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -95,14 +100,36 @@
           </div>
         </div>
         <div class="card-info">
+          <h3 class="card-heading">${item.category ? item.category.charAt(0).toUpperCase()+item.category.slice(1) : 'Visual'} · ${item.funnel ? item.funnel.charAt(0).toUpperCase()+item.funnel.slice(1) : ''}</h3>
+          <span class="card-date">${formatDate(item.timestamp)}</span>
           <div class="card-meta">${tags.map(t => `<span class="meta-tag">${t}</span>`).join('')}</div>
-          <div class="card-date">${formatDate(item.timestamp)}</div>
           ${item.prompt ? `<div class="card-prompt">${item.prompt}</div>` : ''}
         </div>`;
+
+      // Mobile tap: toggle overlay visibility
+      card.addEventListener('click', (e) => {
+        if (window.matchMedia('(hover: none)').matches) {
+          const isBtn = e.target.closest('[data-action]');
+          if (!isBtn) {
+            // Toggle this card's overlay, hide others
+            const isActive = card.classList.contains('overlay-active');
+            document.querySelectorAll('.history-card.overlay-active').forEach(c => c.classList.remove('overlay-active'));
+            if (!isActive) card.classList.add('overlay-active');
+            e.stopPropagation();
+          }
+        }
+      });
 
       grid.appendChild(card);
     });
   }
+
+  // Dismiss overlay when tapping outside a card
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.history-card')) {
+      document.querySelectorAll('.history-card.overlay-active').forEach(c => c.classList.remove('overlay-active'));
+    }
+  });
 
   // Event delegation for card overlay buttons
   historyContainer.addEventListener('click', (e) => {
