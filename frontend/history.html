@@ -53,14 +53,14 @@
     .go-generate-btn { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; background:linear-gradient(135deg,var(--primary-light),var(--primary)); color:white; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:0.8px; transition:all 0.3s; }
     .go-generate-btn:hover { background:linear-gradient(135deg,#A59990,#7B5940); transform:translateY(-2px); box-shadow:0 8px 25px rgba(140,106,74,0.4); }
 
-    .history-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px; }
+    .history-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
 
     .history-card { background:white; border:1px solid var(--border); position:relative; transition:transform 0.3s,box-shadow 0.3s; }
     .history-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(140,106,74,0.15); }
 
-    .card-thumb { position:relative; width:100%; aspect-ratio:1; overflow:hidden; background:var(--bg-light); }
-    .card-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .card-thumb .video-thumb { width:100%; height:100%; object-fit:cover; display:block; }
+    .card-thumb { position:relative; width:100%; height:180px; overflow:hidden; background:var(--bg-light); }
+    .card-thumb img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
+    .card-thumb .video-thumb { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:block; }
     .output-badge { position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.65); color:white; font-size:10px; font-weight:600; padding:3px 8px; letter-spacing:0.5px; text-transform:uppercase; }
     .card-overlay { position:absolute; inset:0; background:rgba(0,0,0,0); display:flex; align-items:center; justify-content:center; gap:8px; opacity:0; transition:all 0.3s; }
     .history-card:hover .card-overlay { background:rgba(0,0,0,0.45); opacity:1; }
@@ -115,10 +115,15 @@
     footer { background:#111; color:white; padding:30px 20px; text-align:center; }
     .footer-copyright { color:var(--text-light); font-size:14px; }
 
-    @media (max-width:768px) { .navbar { padding:14px 20px; } .navbar-links { gap:16px; } .history-section { padding:40px 20px 60px; } .history-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; } }
-    @media (max-width:480px) { .navbar-links a.hide-mobile { display:none; } .history-grid { grid-template-columns:1fr 1fr; } }
+    @media (max-width:768px) { .navbar { padding:12px 16px !important; flex-direction:row !important; flex-wrap:nowrap !important; } .logo { font-size:19px; } .logo-tagline { font-size:0.52rem; } .nav-menu { gap:10px; } .nav-home-link { font-size:11px; } .history-section { padding:20px 12px 60px; } .history-grid { grid-template-columns:repeat(2,1fr); gap:10px; } .card-thumb { height:44vw; } }
+    @media (max-width:480px) { .history-grid { grid-template-columns:repeat(2,1fr); gap:8px; } .card-thumb { height:46vw; } .page-header h1 { font-size:20px; } }
+
+    /* Touch devices: always show overlay buttons */
+    @media (hover: none) {
+      .card-overlay { background:rgba(0,0,0,0.28) !important; opacity:1 !important; }
+      .history-card:hover { transform:none; box-shadow:none; }
+    }
   </style>
-  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
 
