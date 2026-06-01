@@ -3,16 +3,17 @@
   import { getAuth, onAuthStateChanged, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
   import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
   import { initNavAuth, getLocalAvatar, getInitials, renderNavAvatar } from './nav-module.js';
-  // Cloudinary credentials fetched at runtime
+  // Cloudinary credentials fetched at runtime from Firestore config/cloudinary
   let CLOUDINARY_CLOUD = null;
   let CLOUDINARY_PRESET = null;
   async function _ensureCloudinaryConfig() {
     if (CLOUDINARY_CLOUD && CLOUDINARY_PRESET) return;
-    const { getFunctions: _getFns, httpsCallable: _call } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js');
-    const fns = _getFns(app);
-    const result = await _call(fns, 'cloudinaryConfig')();
-    CLOUDINARY_CLOUD = result.data.cloud;
-    CLOUDINARY_PRESET = result.data.preset;
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'config', 'cloudinary'));
+    if (!snap.exists()) throw new Error('config/cloudinary doc missing in Firestore');
+    CLOUDINARY_CLOUD  = snap.data().cloud_name;
+    CLOUDINARY_PRESET = snap.data().upload_preset;
   }
 
   const auth = getAuth(app);

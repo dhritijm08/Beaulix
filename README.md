@@ -10,6 +10,7 @@ Developed as a 6th Semester BCA project at **Mount Carmel College, Autonomous, B
 ## Table of Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
@@ -44,6 +45,81 @@ The overall pipeline is:
 ```
 User Input → Data Processing → ML Prediction → AI Visual Generation → Output Display → Firebase Storage
 ```
+
+---
+
+## Screenshots
+
+### Home Page
+The landing page introduces Beaulix with the tagline *"Turn product type + concern into ads that convert"*, flanked by example beauty ad visuals. Navigation links to Home, How It Works, Features, Examples, and Log In.
+
+![Home Page](screenshots/Home%20Page.png)
+
+---
+
+### Sign Up & Login
+Clean, card-based authentication forms with email/password fields and a **Continue with Google** option on the login page. Sign-up collects Full Name, Email, Password, and Confirm Password.
+
+| Sign Up | Login |
+|---|---|
+| ![Sign Up](screenshots/Sign%20Up.png) | ![Login](screenshots/Login.png) |
+
+---
+
+### Generator — Step 1: Marketing Strategy Profile
+Users define their campaign inputs: **Product Category**, **Occasion**, **Skin Type**, **Makeup Focus**, **Funnel Stage** (Awareness / Consideration / Conversion / Retention), **Age Range**, and **Gender**. The active profile summary is shown as tags before hitting **Analyse Marketing Profile**.
+
+![Marketing Strategy Profile](screenshots/Marketing%20Analysis.png)
+
+---
+
+### Generator — Step 1 Results: Marketing Analysis Output
+After analysis, a dark results panel displays four predicted performance metrics with confidence intervals:
+
+| Metric | Example Result |
+|---|---|
+| Predicted CTR | 3.36% — 19% above avg |
+| Predicted Conversion | 1.41% — 3% above avg |
+| Engagement Rate | 4.31% — 16% above avg |
+| Confidence Score | 92.6% — Exceptional |
+
+A **Recommended Visual Strategy** block suggests scene description, brand style, whether to include a human face, aspect ratio, and output type — and pre-fills Step 2 automatically.
+
+![Marketing Analysis Output](screenshots/Marketing%20Analysis%20Output.png)
+
+---
+
+### Generator — Step 2: Visual Generation (Input)
+Step 2 collects: **Product Type**, **Product Colour**, **Scene Description** (free text), **Brand Style**, **Include Human Face** toggle, **Gender**, **Age Range**, **Skin Tone** (Fair / Light / Medium / Tan / Deep), **Region / Ethnicity**, **Aspect Ratio** (1:1 Square, 9:16 Portrait, 16:9 Landscape, 4:5 Instagram), **Output Type** (Image / Video), and **Duration** for videos. A progress bar appears during generation.
+
+| Visual Parameters | Aspect Ratio & Output |
+|---|---|
+| ![Visual Generation 1](screenshots/Visual%20Generation%201.png) | ![Visual Generation 2](screenshots/Visual%20Generation%202.png) |
+
+---
+
+### Generator — Step 2 Results: Generated Visual & Ad Copy
+The Preview panel renders the SDXL-generated image or video inline. Below it, the **Ad Text** section shows five individually-copyable fields — Hook / Opening Line, Headline, Primary Text, CTA, and Offer / Promotion. A **Recommended Targeting** chip list, **Best Platform Placement** tags (e.g. Instagram, YouTube, Pinterest), and a creative performance uplift card showing Conv, CTR, and Engagement gains vs baseline complete the output.
+
+| Generated Visual + Ad Copy | Targeting & Performance Uplift |
+|---|---|
+| ![Visual Generation Output 1](screenshots/Visual%20Generation%20Output%201.png) | ![Visual Generation Output 2](screenshots/Visual%20Generation%20Output%202.png) |
+
+![Visual Generation Output 3](screenshots/Visual%20Generation%20Output%203.png)
+
+---
+
+### Generated History
+A gallery of all previously created ads. Each card shows a thumbnail with an IMAGE or VIDEO badge, campaign name, date/time, category and funnel tags, aspect ratio, and a truncated prompt. Hovering reveals **View**, **Download**, and **Delete** action buttons.
+
+![History](screenshots/History.png)
+
+---
+
+### My Profile
+Shows account details — Full Name, Email (with Verified badge), Sign-in method, and User ID — plus an Account Actions section with **Change Password** and **Sign Out**. Avatar is uploaded via Cloudinary.
+
+![Profile](screenshots/Profile.png)
 
 ---
 
