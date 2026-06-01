@@ -4,8 +4,14 @@
    ============================================================ */
 
 /* ── Prevent horizontal overflow globally ── */
-html, body {
-  overflow-x: hidden;
+/* IMPORTANT: overflow-x on `html` must NOT be `hidden` — it transfers the
+   scroll root away from <html> and silently breaks ALL position:sticky
+   elements (navbar, preview panel). Use `clip` on html instead. */
+html {
+  overflow-x: clip;
+}
+body {
+  overflow-x: clip;
   max-width: 100%;
 }
 
@@ -21,7 +27,7 @@ html, body {
 }
 
 /* ── Generator layout ── */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .generator-container { grid-template-columns: 1fr !important; }
   .preview-panel { position: static !important; }
 }
@@ -33,7 +39,7 @@ html, body {
     padding: 16px !important;
     width: 100% !important;
     max-width: 100vw !important;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
   }
 
   .generator-container {

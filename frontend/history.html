@@ -9,9 +9,9 @@
   <link rel="stylesheet" href="layout.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { max-width:100%; overflow-x:hidden; }
+    html, body { max-width:100%; overflow-x:clip; }
     ::selection { background-color:rgba(201,164,107,0.3); color:#000; }
-    body { font-family:'Inter',sans-serif; background:linear-gradient(#fff,var(--bg-light)); color:var(--text-dark); min-height:100vh; display:flex; flex-direction:column; visibility:hidden; }
+    body { font-family:'Inter',sans-serif; background:linear-gradient(#fff,var(--bg-light)); color:var(--text-dark); min-height:100vh; visibility:hidden; }
 
     .nav-home-link { text-decoration: none; color: var(--text-medium); font-weight: 500; position: relative; padding: 4px 0; transition: color 0.3s ease; text-transform: uppercase; font-size: 13px; letter-spacing: 1.5px; }
     .nav-home-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 1px; background: var(--primary); transition: width 0.3s ease; }
