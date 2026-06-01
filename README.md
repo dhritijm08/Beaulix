@@ -5,6 +5,8 @@
 Developed as a 6th Semester BCA project at **Mount Carmel College, Autonomous, Bengaluru** (2025–2026).  
 **Author:** Dhriti Jagan Mohan
 
+🔗 **Live Demo:** [https://beaulix-model.web.app](https://beaulix-model.web.app)
+
 ---
 
 ## Table of Contents
@@ -83,7 +85,7 @@ After analysis, a dark results panel displays four predicted performance metrics
 | Engagement Rate | 4.31% — 16% above avg |
 | Confidence Score | 92.6% — Exceptional |
 
-A **Recommended Visual Strategy** block suggests scene description, brand style, whether to include a human face, aspect ratio, and output type — and pre-fills Step 2 automatically.
+A **Recommended Visual Strategy** block suggests scene description, brand style, whether to include a human face, aspect ratio, and output type.
 
 ![Marketing Analysis Output](screenshots/Marketing%20Analysis%20Output.png)
 
