@@ -12,3 +12,11 @@ pydantic==2.11.0
 # needed for background retraining. Do not remove it — retraining reads Excel directly.
 openpyxl==3.1.2
 slowapi==0.1.9
+# Added for image-based product-category resolution (backend/image_category.py) —
+# OCR fallback used only when the frontend filename resolver finds no match.
+# No ML model/weights: pytesseract just wraps the tesseract-ocr system binary.
+# Requires the tesseract-ocr system package to be installed on the deploy image
+# (e.g. `apt-get install -y tesseract-ocr`) — pip alone is not enough.
+Pillow==11.0.0
+pytesseract==0.3.13
+requests==2.32.3
