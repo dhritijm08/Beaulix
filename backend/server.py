@@ -19,6 +19,8 @@ from slowapi.errors import RateLimitExceeded
 logger = logging.getLogger(__name__)
 
 from model import RecommendationModel, DATASET_PATH
+from copy_engine import get_ad_copy as _get_ad_copy_standalone
+from image_category import classify_category_from_image_url as _classify_category_from_image_url
 
 # ── Rate limiter ───────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
@@ -165,6 +167,12 @@ class PredictionRequest(BaseModel):
     # brand_style is for the GPU generator only — not used for ML prediction.
     # Optional so any cached requests that still include it are accepted.
     brand_style:          Optional[str] = None
+    # Which of the three creative concepts (Product Hero / Beauty Lifestyle /
+    # Social Concept) this copy is for. Only consumed by copy_engine.get_ad_copy
+    # (selects headline/body template set) — not used for ML prediction, so
+    # it's optional/ignored on /predict and /predict-step2 requests that
+    # don't care about it.
+    creative_direction:   Optional[str] = "hero"
 
     # Allowlists prevent junk values from polluting dataset.csv and degrading
     # model quality over time.
@@ -175,6 +183,7 @@ class PredictionRequest(BaseModel):
     _VALID_AGE:        ClassVar[set] = {"13-17", "18-24", "25-34", "35-44", "45-60", "60+"}
     _VALID_GENDER:     ClassVar[set] = {"female", "male", "non-binary", "all-genders"}
     _VALID_OCCASION:   ClassVar[set] = {"", "daily", "wedding", "party", "gym", "vacation", "work", "selfcare"}
+    _VALID_DIRECTION:  ClassVar[set] = {"hero", "lifestyle", "social"}
     _VALID_ATTR1:      ClassVar[set] = {
         "", "oily", "dry", "combination", "normal", "sensitive", "mature",
         "moisturising", "anti-aging", "brightening", "acne-control",
@@ -221,6 +230,14 @@ class PredictionRequest(BaseModel):
         val = (v or "").lower()
         if val not in cls._VALID_OCCASION:
             raise ValueError(f"occasion must be one of {sorted(cls._VALID_OCCASION)}")
+        return val
+
+    @field_validator("creative_direction")
+    @classmethod
+    def _check_direction(cls, v: Optional[str]) -> str:
+        val = (v or "hero").lower()
+        if val not in cls._VALID_DIRECTION:
+            raise ValueError(f"creative_direction must be one of {sorted(cls._VALID_DIRECTION)}")
         return val
 
     @field_validator("decision_attribute_1")
@@ -318,6 +335,65 @@ async def predict(request: Request, body: PredictionRequest):
         raise HTTPException(status_code=500, detail="Prediction failed. Please try again.")
 
 
+class CategoryClassifyRequest(BaseModel):
+    image_url: str
+
+
+@app.post("/classify-product-category", dependencies=[Depends(require_api_key)])
+@limiter.limit("30/minute")
+async def classify_product_category(request: Request, body: CategoryClassifyRequest):
+    """Second-pass product-category resolution from the ACTUAL uploaded
+    product image, used ONLY when the frontend's filename-based resolver
+    found no keyword match (e.g. a generic upload filename like
+    'shopping.webp'). Deterministic OCR match against the same category
+    keyword lists — no ML model, see image_category.py. Returns
+    {"category": null} (never a guessed category) when nothing recognizable
+    was found, so the caller can safely fall back to category-neutral copy.
+    """
+    loop = asyncio.get_running_loop()
+    try:
+        category = await loop.run_in_executor(
+            executor, _classify_category_from_image_url, body.image_url
+        )
+    except Exception as e:
+        logger.warning("Error in /classify-product-category: %s", e)
+        category = None
+    return JSONResponse(content={"category": category})
+
+
+@app.post("/ad-copy", dependencies=[Depends(require_api_key)])
+@limiter.limit("60/minute")
+async def ad_copy_endpoint(request: Request, body: PredictionRequest):
+    """
+    Lightweight, ML-independent ad-copy endpoint (Part 4 of the copy-pipeline
+    fix). Calls copy_engine.get_ad_copy() directly — the SAME function
+    /predict eventually delegates to via RecommendationModel.get_ad_copy —
+    so the creative-generation flow can obtain real ad copy without waiting
+    on (or depending on) the Random Forest prediction. This does NOT require
+    `model` to be loaded, so it stays available even while /predict is
+    warming up. No copy constants are duplicated here.
+    """
+    try:
+        features = {k: v for k, v in body.model_dump().items() if k != "brand_style"}
+        # ctr/conv/eng are accepted by get_ad_copy's signature for parity with
+        # RecommendationModel.get_ad_copy, but copy_engine.get_ad_copy doesn't
+        # actually use them (copy varies by feature dimensions, not by the ML
+        # prediction) — no prediction is run to obtain them.
+        print('[COPY DEBUG] copy_engine.get_ad_copy called')
+        print(f"[BEAULIX COPY] request.product_category = {body.product_category!r} creative_direction = {body.creative_direction!r}")
+        ad_copy = _get_ad_copy_standalone(features, 0.0, 0.0, 0.0)
+        print('[COPY DEBUG] generated ad_copy:', ad_copy)
+        print(f"[COPY TEST] /ad-copy endpoint generated: {ad_copy}")
+        print(f"[BEAULIX COPY] returned headline = {ad_copy.get('headline')!r} body = {ad_copy.get('description')!r}")
+        return JSONResponse(content={"success": True, "ad_copy": ad_copy})
+    except ValueError as e:
+        logger.warning("Invalid input to /ad-copy: %s", e)
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error("Error in /ad-copy: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Ad copy generation failed. Please try again.")
+
+
 class Step2PredictionRequest(PredictionRequest):
     """
     Extends PredictionRequest with Step 2 creative-choice fields.
@@ -411,6 +487,19 @@ async def get_dataset_stats(request: Request):
     except Exception as e:
         logger.error("Error in /dataset-stats: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Dataset stats unavailable.")
+
+
+# ── TEMPORARY startup diagnostic (remove after root cause is confirmed) ─
+# Placed at module scope, not inside `if __name__ == "__main__"`, because
+# Render's actual start command is `uvicorn server:app ...`, which imports
+# this module directly and never executes the __main__ block below. A
+# print placed only in __main__ would never show up in Render's logs.
+print(f"[ROUTE DEBUG] server_file={__file__}", flush=True)
+_classify_route = next((r for r in app.routes if getattr(r, "path", None) == "/classify-product-category"), None)
+print(f"[ROUTE DEBUG] classify_route_present={_classify_route is not None}", flush=True)
+print(f"[ROUTE DEBUG] classify_route_methods={getattr(_classify_route, 'methods', None)}", flush=True)
+print("[ROUTE DEBUG] all_routes=" + str(sorted(r.path for r in app.routes if hasattr(r, 'path'))), flush=True)
+# ── end TEMPORARY diagnostic ─────────────────────────────────────────────
 
 
 if __name__ == "__main__":
