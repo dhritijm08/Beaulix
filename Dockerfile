@@ -34,17 +34,15 @@ COPY backend/ /app/
 RUN pip install --no-cache-dir -r requirements-build.txt \
     && pip install --no-cache-dir -r requirements.txt
 
-# download_data.py / train_simple_model.py / build_visual_cache.py are
-# intentionally NOT run here — they need GOOGLE_SERVICE_ACCOUNT_JSON and the
-# GDRIVE_* env vars, which Docker builds don't receive. Run them from
-# Render's Pre-Deploy Command instead (Settings -> Deploy -> Pre-Deploy
-# Command), which does get Environment Variables and runs before Start
-# Command on every deploy, same as today:
-#
-#   python download_data.py && python train_simple_model.py && python build_visual_cache.py
+# download_data.py / train_simple_model.py / build_visual_cache.py need
+# GOOGLE_SERVICE_ACCOUNT_JSON and GDRIVE_* env vars, which `docker build`
+# does not receive — so they can't run here. Render's Pre-Deploy Command
+# would normally handle this, but it isn't available on the free tier, so
+# entrypoint.sh runs them at container STARTUP instead (env vars ARE
+# available then), before finally exec'ing uvicorn.
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
 
-# Shell form so $PORT actually expands (exec-form CMD/ENTRYPOINT do not
-# perform env var substitution). Matches the existing Start Command exactly.
-CMD uvicorn server:app --host 0.0.0.0 --port $PORT
+ENTRYPOINT ["/app/entrypoint.sh"]
