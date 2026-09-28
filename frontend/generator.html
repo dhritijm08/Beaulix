@@ -30,7 +30,7 @@
   <header class="navbar navbar-compact">
     <div class="logo-wrapper">
       <div class="logo">BEAULIX</div>
-      <span class="logo-tagline">Decision Intelligence for Beauty Ads</span>
+      <span class="logo-tagline">AI Creative Intelligence for Beauty</span>
     </div>
     <div class="nav-menu nav-compact">
       <a href="index.html" class="nav-home-link">Home</a>
@@ -64,18 +64,104 @@
       </div>
     </div>
 
+    <div class="studio-hero">
+      <h1 class="studio-hero-title">Create with Beaulix</h1>
+      <p class="studio-hero-sub">Turn your beauty product into beautiful, ready-to-use creative.</p>
+    </div>
+
+    <div class="creative-flow">
+
+      <!-- ============ BRAND ASSETS ============ -->
+      <div class="flow-block">
+        <div class="flow-block-title"><span class="flow-step-num">1</span>Brand assets</div>
+        <div class="asset-grid">
+          <div class="asset-card" id="assetCardProduct">
+            <input type="file" id="assetProductInput" accept="image/*" class="asset-file-input">
+            <label for="assetProductInput" class="asset-drop" id="assetProductDrop">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span class="asset-drop-label">Upload product</span>
+              <span class="asset-drop-hint">Lipstick, serum, perfume, skincare…</span>
+            </label>
+            <div class="asset-preview hidden" id="assetProductPreview">
+              <img id="assetProductImg" alt="Product preview">
+              <button type="button" class="asset-remove" id="assetProductRemove" aria-label="Remove product image">✕</button>
+            </div>
+            <div class="asset-card-label">Product</div>
+          </div>
+
+          <div class="asset-card" id="assetCardLogo">
+            <input type="file" id="assetLogoInput" accept="image/*" class="asset-file-input">
+            <label for="assetLogoInput" class="asset-drop" id="assetLogoDrop">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span class="asset-drop-label">Upload logo</span>
+              <span class="asset-drop-hint">Optional</span>
+            </label>
+            <div class="asset-preview hidden" id="assetLogoPreview">
+              <img id="assetLogoImg" alt="Logo preview">
+              <button type="button" class="asset-remove" id="assetLogoRemove" aria-label="Remove logo">✕</button>
+            </div>
+            <div class="asset-card-label">Brand Logo <span class="asset-optional">Optional</span></div>
+          </div>
+
+          <div class="asset-card" id="assetCardReference">
+            <input type="file" id="assetReferenceInput" accept="image/*" class="asset-file-input">
+            <label for="assetReferenceInput" class="asset-drop" id="assetReferenceDrop">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span class="asset-drop-label">Upload reference</span>
+              <span class="asset-drop-hint">Optional — a look you like</span>
+            </label>
+            <div class="asset-preview hidden" id="assetReferencePreview">
+              <img id="assetReferenceImg" alt="Reference preview">
+              <button type="button" class="asset-remove" id="assetReferenceRemove" aria-label="Remove reference image">✕</button>
+            </div>
+            <div class="asset-card-label">Reference Creative <span class="asset-optional">Optional</span></div>
+          </div>
+        </div>
+        <p class="asset-note" id="assetNote">Your product, logo, and reference images are uploaded and sent along with your creative choices below. If your connected generation engine doesn't yet support an image input, Beaulix falls back gracefully to generating from your creative type, style, and prompt details alone.</p>
+      </div>
+
+      <!-- ============ WHAT TO CREATE ============ -->
+      <div class="flow-block">
+        <div class="flow-block-title"><span class="flow-step-num">2</span>What would you like to create?</div>
+        <div class="content-type-grid" id="contentTypeGrid" role="radiogroup">
+          <label class="content-type-option"><input type="radio" name="content-type" value="post" data-ratio="1:1" data-output="image"><div class="content-type-card"><span class="ct-icon">▦</span><span class="ct-label">Instagram Post</span></div></label>
+          <label class="content-type-option"><input type="radio" name="content-type" value="story" data-ratio="9:16" data-output="image"><div class="content-type-card"><span class="ct-icon">▯</span><span class="ct-label">Instagram Story</span></div></label>
+          <label class="content-type-option"><input type="radio" name="content-type" value="reel" data-ratio="9:16" data-output="video"><div class="content-type-card"><span class="ct-icon">▶</span><span class="ct-label">Reel</span></div></label>
+          <label class="content-type-option"><input type="radio" name="content-type" value="promo" data-ratio="4:5" data-output="image"><div class="content-type-card"><span class="ct-icon">◈</span><span class="ct-label">Product Showcase</span></div></label>
+          <label class="content-type-option"><input type="radio" name="content-type" value="campaign" data-ratio="16:9" data-output="image"><div class="content-type-card"><span class="ct-icon">▭</span><span class="ct-label">Beauty Campaign</span></div></label>
+        </div>
+      </div>
+
+      <!-- ============ CREATIVE STYLE ============ -->
+      <div class="flow-block">
+        <div class="flow-block-title"><span class="flow-step-num">3</span>Choose your creative style</div>
+        <div class="style-grid" id="styleGrid" role="radiogroup">
+          <label class="style-option"><input type="radio" name="creative-style" value="luxury-elegant"><div class="style-card"><span class="style-swatch style-swatch--luxury"></span><span class="style-label">Luxury</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="modern-minimalist"><div class="style-card"><span class="style-swatch style-swatch--minimal"></span><span class="style-label">Minimal</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="editorial"><div class="style-card"><span class="style-swatch style-swatch--editorial"></span><span class="style-label">Editorial</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="bold-vibrant"><div class="style-card"><span class="style-swatch style-swatch--bold"></span><span class="style-label">Bold &amp; Vibrant</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="natural-organic"><div class="style-card"><span class="style-swatch style-swatch--natural"></span><span class="style-label">Natural</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="glam-dramatic"><div class="style-card"><span class="style-swatch style-swatch--glam"></span><span class="style-label">Glam</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="soft-romantic"><div class="style-card"><span class="style-swatch style-swatch--soft"></span><span class="style-label">Soft / Romantic</span></div></label>
+          <label class="style-option"><input type="radio" name="creative-style" value="ugc-inspired"><div class="style-card"><span class="style-swatch style-swatch--ugc"></span><span class="style-label">UGC-inspired</span></div></label>
+        </div>
+      </div>
+
+    </div>
+
     <div class="generator-container">
       <div class="input-panel">
 
-        <div class="panel-header" id="step1Header" role="button" aria-expanded="true" aria-controls="step1Content" tabindex="0">
+        <div class="panel-header" id="step1Header" role="button" aria-expanded="false" aria-controls="step1Content" tabindex="0" style="display:none;">
           <div class="panel-header-left">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#brain"></use></svg>
-            Step 1: Marketing Strategy Profile
+            Marketing Intelligence <span class="panel-header-req">optional</span>
           </div>
           <span class="collapse-icon" aria-hidden="true">▼</span>
         </div>
 
-        <div class="panel-content" id="step1Content">
+        <div class="panel-content collapsed" id="step1Content" style="display:none;">
+          <p class="advanced-hint">Beaulix already generates your creative from the type &amp; style you picked above, with sensible defaults. Open this section if you want to sharpen targeting or see predicted performance.</p>
           <!-- ML degraded banner: shown by JS when the prediction engine is offline.
                Pre-rendered in HTML to avoid runtime DOM creation. -->
           <div id="mlDegradedBanner" style="display:none;align-items:center;gap:10px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:0.875rem;font-weight:500;">
@@ -152,17 +238,25 @@
 
           <button class="btn-analyze" id="analyzeBtn" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            Analyze Marketing Profile
+            Continue
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
 
           <div class="loading-stages hidden" id="loadingStages">
-            <div class="loading-stage" id="stage1"><div class="stage-indicator" id="indicator1">1</div><span>Analyzing marketing profile...</span></div>
-            <div class="loading-stage" id="stage2"><div class="stage-indicator" id="indicator2">2</div><span>Querying ML decision engine...</span></div>
-            <div class="loading-stage" id="stage3"><div class="stage-indicator" id="indicator3">3</div><span>Matching with similar profiles...</span></div>
-            <div class="loading-stage" id="stage4"><div class="stage-indicator" id="indicator4">4</div><span>Calculating confidence intervals...</span></div>
+            <div class="loading-stage" id="stage1"><div class="stage-indicator" id="indicator1">1</div><span>Understanding your product...</span></div>
+            <div class="loading-stage" id="stage2"><div class="stage-indicator" id="indicator2">2</div><span>Consulting the recommendation engine...</span></div>
+            <div class="loading-stage" id="stage3"><div class="stage-indicator" id="indicator3">3</div><span>Matching with similar creatives...</span></div>
+            <div class="loading-stage" id="stage4"><div class="stage-indicator" id="indicator4">4</div><span>Finalizing your creative direction...</span></div>
           </div>
 
+          <div class="panel-header inner-panel-header hidden" id="insightsHeader" role="button" aria-expanded="false" aria-controls="insightsBody" tabindex="0">
+            <div class="panel-header-left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#bar-chart"></use></svg>
+              Advanced Marketing Insights
+            </div>
+            <span class="collapse-icon" aria-hidden="true">▼</span>
+          </div>
+          <div class="panel-content collapsed" id="insightsBody">
           <div class="analysis-results hidden" id="analysisResults">
             <div class="analysis-header"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#bar-chart"></use></svg>Marketing Analysis Results</div>
             <div class="metrics-grid">
@@ -209,29 +303,38 @@
               <span id="analysisFooterNote">⚡ Beaulix ML v1.0</span>
             </div>
           </div>
+          </div>
+          <div class="form-group" style="margin-top:1.25rem;">
+            <label for="productType">Product Type *</label>
+            <select id="productType" class="form-control" disabled><option value="" disabled selected>Select a category first</option></select>
+            <small>Needed so Beaulix knows what to generate</small>
+          </div>
         </div>
 
-        <div class="panel-header step2-panel-header" id="step2Header" role="button" aria-expanded="false" aria-controls="step2Content" tabindex="0">
+        <div class="panel-header step2-panel-header" id="step2Header" role="button" aria-expanded="false" aria-controls="step2Content" tabindex="0" style="display:none;">
           <div class="panel-header-left">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            Step 2: Visual Generation
+            Advanced Options
           </div>
           <span class="collapse-icon" aria-hidden="true">▼</span>
         </div>
 
-        <div class="panel-content collapsed" id="step2Content">
+        <div class="panel-content collapsed" id="step2Content" style="display:none;">
+          <p class="advanced-hint">These fine-tune your creative. Your selections above (content type &amp; style) already set most of this — only change these if you want manual control.</p>
           <div class="form-grid">
-            <div class="form-group"><label for="productType">Product Type *</label><select id="productType" class="form-control" disabled><option value="" disabled selected>Select a category first</option></select><small>Select your exact product type</small></div>
             <div class="form-group"><label for="productColor">Product Color</label><input type="text" id="productColor" class="form-control" placeholder="e.g., Ruby Red, Nude Pink"><small>Colour / shade of product</small></div>
-            <div class="form-group full-width"><label for="sceneDescription">Scene Description</label><textarea id="sceneDescription" class="form-control" placeholder="e.g., Applying in front of mirror, At vanity, Outdoors..." rows="2"></textarea></div>
+            <div class="form-group full-width"><label for="sceneDescription">Scene Description <span class="asset-optional">Optional — Beaulix already builds a scene from your format &amp; style choices above</span></label><textarea id="sceneDescription" class="form-control" placeholder="Optional — e.g., Applying in front of mirror, At vanity, Outdoors..." rows="2"></textarea></div>
             <div class="form-group">
-              <label for="brandStyle">Brand Style</label>
+              <label for="brandStyle">Brand Style Override (Optional)</label>
               <select id="brandStyle" class="form-control">
-                <option value="" disabled selected>Select style</option>
+                <option value="" disabled>Select style</option>
                 <option value="luxury-elegant">Luxury Elegant</option><option value="modern-minimalist">Modern Minimalist</option>
+                <option value="editorial">Editorial</option>
                 <option value="bold-vibrant">Bold & Vibrant</option><option value="natural-organic">Natural & Organic</option>
                 <option value="glam-dramatic">Glam & Dramatic</option><option value="soft-romantic">Soft Romantic</option>
+                <option value="ugc-inspired">UGC-inspired</option>
               </select>
+              <small>Synced with your creative style choice above — change here to override</small>
             </div>
             <div class="form-group">
               <label>Include Human Face</label>
@@ -256,6 +359,7 @@
               <div class="form-group full-width"><label for="humanRegion">Region / Ethnicity</label><input type="text" id="humanRegion" class="form-control" placeholder="e.g., Indian, Chinese, Caucasian"></div>
             </div>
           </div>
+          </div>
 
           <div class="form-grid">
             <div class="form-group full-width">
@@ -277,37 +381,388 @@
             <div class="form-group full-width hidden" id="duration-group">
               <label for="duration">Duration (seconds) *</label>
               <select id="duration" class="form-control">
-                <option value="" disabled selected>Select duration</option>
-                <option value="2">2 seconds</option><option value="4">4 seconds</option><option value="6">6 seconds</option>
+                <option value="2">2 seconds</option><option value="4" selected>4 seconds</option><option value="6">6 seconds</option>
               </select>
             </div>
           </div>
 
           <button class="btn-generate" id="generateCreativeBtn" disabled>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            Generate Visual
+            <span id="generateCreativeBtnLabel">Generate Variations</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="generateCreativeSpinner" class="hidden btn-spinner"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           </button>
 
           <div id="generationProgress" class="hidden">
             <div class="generation-progress">
-              <span>Generating... 20–30s for images, 1–2 mins for videos</span>
+              <span id="generationProgressLabel">Generating... 20–30s for images, 1–2 mins for videos</span>
               <div class="progress-bar-wrap"><div class="progress-fill" id="progressBar"></div></div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- ============ CREATIVE VARIATIONS GRID ============ -->
+        <!-- Populated by generateCreativeVariations() in generator-init.js.
+             Each generated creative gets its own unique Creative ID (stored
+             with it in Firestore history) so real consumer-response data can
+             later be attached to the exact creative that produced it. -->
+        <style>
+          /* ============ Compare Creative Directions — redesigned cards ============ */
+          .variations-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:1.75rem;}
+          .variation-card{border:1px solid var(--border);border-radius:0;overflow:hidden;background:var(--bg-white);display:flex;flex-direction:column;transition:box-shadow .18s ease,border-color .18s ease;box-shadow:0 1px 2px rgba(20,14,8,0.04);}
+          .variation-card:hover{box-shadow:0 6px 20px rgba(20,14,8,0.08);}
+
+          /* -- image, the visual priority of every card -- */
+          .variation-card .vc-image-wrap{position:relative;background:var(--bg-light);}
+          .variation-card .variation-media{position:relative;background:var(--bg-light);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+          .variation-card.is-loading .variation-media{aspect-ratio:4/5;}
+          .variation-card .variation-media img,.variation-card .variation-media video{width:100%;height:auto;max-height:640px;object-fit:contain;display:block;}
+          .variation-card.is-loading .variation-media{color:var(--text-light);font-size:0.8rem;}
+          .vc-image-wrap .vc-index-badge{position:absolute;top:12px;left:12px;font-size:0.68rem;font-weight:800;letter-spacing:0.05em;color:var(--text-dark);background:rgba(255,255,255,0.88);padding:3px 9px;border-radius:999px;}
+          .vc-image-wrap .vc-category-pill{position:absolute;top:12px;right:12px;font-size:0.62rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fff;background:rgba(20,14,8,0.62);padding:4px 10px;border-radius:0;}
+          .vc-image-wrap .vc-image-actions{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:14px;background:linear-gradient(to top,rgba(20,14,8,0.42),transparent 55%);opacity:0;transition:opacity .15s ease;pointer-events:none;}
+          .vc-image-wrap:hover .vc-image-actions{opacity:1;pointer-events:auto;}
+          .vc-image-actions button{font-size:0.72rem;font-weight:700;padding:7px 14px;border-radius:0;border:none;background:rgba(255,255,255,0.94);color:var(--text-dark);cursor:pointer;}
+          .vc-image-actions button:hover{background:#fff;}
+
+          /* -- card body: clear hierarchy, generous whitespace -- */
+          .vc-body{padding:16px 18px 4px;display:flex;flex-direction:column;gap:10px;}
+          .variation-card .variation-concept{display:flex;flex-direction:column;gap:2px;}
+          .variation-card .variation-concept-badge{font-size:0.98rem;font-weight:700;letter-spacing:0.01em;color:var(--text-dark);font-family:var(--font-serif,serif);}
+          .variation-card .variation-concept-subtitle{font-size:0.82rem;color:var(--text-medium);}
+          .variation-card .variation-role-explanation{font-size:0.76rem;color:var(--text-medium);font-style:italic;}
+          .variation-card .variation-strategy-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.6rem;font-weight:800;letter-spacing:0.04em;padding:2px 7px;margin-top:4px;width:fit-content;border:1px solid var(--primary);color:var(--primary-dark);background:rgba(140,106,74,0.08);border-radius:0;}
+          .variation-card .variation-strategy-badge.vs-exploration{border-color:var(--border);color:var(--text-medium);background:var(--bg-light);}
+          .variation-card .variation-strategy-explanation{font-size:0.72rem;color:var(--text-medium);font-style:italic;display:block;margin-top:2px;}
+          .variation-card .variation-best-for{font-size:0.74rem;color:var(--text-medium);}
+          .variation-card .variation-best-for b{font-weight:700;color:var(--text-dark);}
+          .variation-card .variation-direction{font-size:0.74rem;color:var(--text-medium);display:flex;flex-direction:column;gap:1px;}
+          .variation-card .variation-direction .vd-label{font-weight:700;color:var(--text-light);font-size:0.62rem;letter-spacing:0.04em;text-transform:uppercase;}
+
+          .variation-card .variation-copy-block{border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:4px;}
+          .variation-card .vc-copy-label{font-size:0.62rem;font-weight:800;letter-spacing:0.05em;color:var(--text-light);}
+          .variation-card .variation-copy{font-size:0.86rem;line-height:1.4;color:var(--text-dark);}
+          .variation-card .variation-copy .v-headline{font-weight:700;display:block;font-size:0.94rem;}
+          .variation-card .variation-copy .v-cta{color:var(--primary);font-weight:600;}
+
+          .variation-card .variation-tags{display:flex;gap:6px;flex-wrap:wrap;}
+          .variation-card .variation-tag{font-size:0.68rem;font-weight:600;padding:2px 9px;border-radius:0;background:rgba(140,106,74,0.1);color:var(--primary-dark);}
+
+          /* -- secondary metadata: creative ID tucked away -- */
+          .variation-card .variation-id{font-size:0.66rem;color:var(--text-light);word-break:break-all;padding-top:2px;}
+
+          /* -- secondary info tucked behind "View details" (spec item 2/4) -- */
+          .variation-card .vc-details-toggle{align-self:flex-start;font-size:0.74rem;font-weight:700;color:var(--primary);background:none;border:none;padding:2px 0;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(140,106,74,0.4);}
+          .variation-card .vc-details-toggle:hover{color:var(--primary-dark);}
+          .variation-card .vc-secondary{display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid var(--border);}
+          .variation-card .vc-secondary.hidden{display:none;}
+
+          /* -- actions: clear primary / secondary / tertiary weight -- */
+          .variation-card .variation-actions{display:flex;flex-direction:column;gap:8px;padding:14px 18px 18px;margin-top:auto;}
+          .variation-card .variation-actions .vc-actions-row{display:flex;gap:8px;}
+          .variation-card .variation-actions button{font-size:0.78rem;padding:8px 10px;border-radius:0;border:1px solid var(--border);background:var(--bg-light);cursor:pointer;font-weight:600;color:var(--text-medium);}
+          .variation-card .variation-actions button:hover{background:var(--border);}
+          .variation-card .variation-actions button:disabled{opacity:0.5;cursor:default;}
+          .variation-card .variation-actions button.v-select{width:100%;background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700;padding:10px 12px;border-radius:0;}
+          .variation-card .variation-actions button.v-select:hover{background:var(--primary-dark);}
+          .variation-card .variation-actions .vc-actions-row button{flex:1;}
+          .variation-card .variation-actions button.v-download{background:transparent;border-color:transparent;color:var(--text-light);}
+          .variation-card .variation-actions button.v-download:hover{background:var(--bg-light);}
+
+          /* -- selected state: never relies on color alone -- */
+          .variation-card.is-selected{border-color:var(--primary);box-shadow:0 0 0 2px rgba(140,106,74,0.25);}
+          .variation-card .variation-selected-badge{display:none;padding:10px 18px 0;}
+          .variation-card .variation-selected-badge .vsb-title{font-size:0.72rem;font-weight:800;color:var(--primary);letter-spacing:0.03em;display:block;}
+          .variation-card .variation-selected-badge .vsb-sub{font-size:0.68rem;color:var(--text-light);display:block;margin-top:1px;}
+          .variation-card.is-selected .variation-selected-badge{display:block;}
+          .variation-card.is-selected .v-select{background:var(--primary-dark);}
+          .variation-card.is-selected .v-select::before{content:"✓ ";}
+
+          .variations-grid-header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-top:2rem;flex-wrap:wrap;}
+          .variations-grid-header h3{margin:0;font-size:1.3rem;font-family:var(--font-serif,serif);}
+          .variations-grid-header #variationsHint{font-size:0.85rem;}
+
+          /* -- AI recommendation banner (spec item 5) -- */
+          #variationsHint.ai-recommendation-banner{display:block;padding:12px 16px;border-radius:0;background:rgba(140,106,74,0.06);border:1px solid rgba(140,106,74,0.25);color:var(--text-medium);}
+          #variationsHint .ai-rec-label{font-size:0.66rem;font-weight:800;letter-spacing:0.06em;color:var(--primary-dark);display:block;margin-bottom:2px;}
+
+          @media (max-width:1024px){.variations-grid{grid-template-columns:repeat(2,1fr);}}
+          @media (max-width:640px){.variations-grid{grid-template-columns:1fr;}}
+          #conceptRefineBar{display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:1.25rem;padding:14px 16px;border-radius:0;background:var(--bg-light);border:1px solid rgba(140,106,74,0.25);}
+          #conceptRefineBar.is-visible{display:flex;}
+          #conceptRefineBar .crb-text{display:flex;flex-direction:column;gap:2px;}
+          #conceptRefineBar .crb-selected{font-size:0.7rem;font-weight:800;color:var(--primary);letter-spacing:0.03em;}
+          #conceptRefineBar .crb-sub{font-size:0.75rem;color:var(--text-medium);}
+          #conceptRefineBar #createMoreLikeThisBtn{white-space:nowrap;font-weight:700;font-size:0.8rem;padding:10px 18px;border-radius:0;border:none;background:var(--primary);color:#fff;cursor:pointer;}
+          #conceptRefineBar #createMoreLikeThisBtn:hover{background:var(--primary-dark);}
+          #conceptRefineBar #createMoreLikeThisBtn:disabled{opacity:0.6;cursor:default;}
+          #conceptRefineBar #refineProgressText{font-size:0.75rem;color:var(--primary);font-weight:600;}
+          #refinementsSection{display:none;margin-top:1.75rem;}
+          #refinementsSection.is-visible{display:block;}
+          #refinementsSection .refinements-lineage{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.75rem;}
+          #refinementsSection .refinements-lineage .rl-tag{font-size:0.7rem;font-weight:700;padding:4px 10px;border-radius:0;background:rgba(140,106,74,0.1);color:var(--primary-dark);}
+          #refinementsSection .refinements-lineage .rl-arrow{color:var(--text-light);font-size:0.9rem;}
+          #refinementsSection h4{margin:0 0 0.5rem;font-size:0.9rem;}
+
+          /* Selected Direction panel (spec item 2) */
+          #selectedDirectionSection{display:none;flex-direction:column;gap:4px;margin-top:1rem;padding:12px 16px;border-radius:0;background:var(--bg-light);border:1px solid rgba(140,106,74,0.2);}
+          #selectedDirectionSection.is-visible{display:flex;}
+          #selectedDirectionSection .sd-label{font-size:0.62rem;font-weight:800;letter-spacing:0.05em;color:var(--text-light);text-transform:uppercase;}
+          #selectedDirectionSection .sd-name{font-size:0.85rem;font-weight:800;color:var(--primary-dark);letter-spacing:0.02em;}
+          #selectedDirectionSection .sd-tags{font-size:0.75rem;color:var(--text-medium);}
+          #selectedDirectionSection .sd-desc{font-size:0.8rem;color:var(--text-dark);margin-top:2px;}
+
+          /* Refinements choices (spec item 3/4) — four plain selects, no
+             advanced/technical controls. */
+          #refinementChoicesPanel{display:none;margin-top:0.75rem;padding:12px 16px;border-radius:0;background:var(--bg-white);border:1px solid var(--border);}
+          #selectedDirectionSection.is-visible + #refinementChoicesPanel{display:block;}
+          #refinementChoicesPanel .rc-title{display:block;font-size:0.7rem;font-weight:800;letter-spacing:0.04em;color:var(--text-light);text-transform:uppercase;margin-bottom:8px;}
+          #refinementChoicesPanel .rc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+          #refinementChoicesPanel .rc-field{display:flex;flex-direction:column;gap:4px;font-size:0.72rem;font-weight:700;color:var(--text-medium);}
+          #refinementChoicesPanel .rc-field select{font-size:0.8rem;padding:6px 8px;border:1px solid var(--border);border-radius:0;background:var(--bg-white);color:var(--text-dark);}
+
+          /* Variation history (spec item 7) — simple horizontal sequence */
+          #variationHistoryBar{display:none;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 1rem;}
+          #variationHistoryBar.is-visible{display:flex;}
+          #variationHistoryBar .vh-step{font-size:0.75rem;font-weight:700;padding:5px 12px;border:1px solid var(--border);color:var(--text-medium);cursor:pointer;background:var(--bg-white);}
+          #variationHistoryBar .vh-step:hover{border-color:var(--primary);color:var(--primary-dark);}
+          #variationHistoryBar .vh-step.is-current{border-color:var(--primary);background:var(--primary);color:#fff;}
+          #variationHistoryBar .vh-arrow{color:var(--text-light);font-size:0.8rem;}
+          /* Step 3 — per-card "Create Variation" child set. The wrapper
+             spans the full grid row (grid-column:1/-1) so it renders as an
+             expanding block directly under just that one parent card,
+             without needing to change the grid's own layout. */
+          .variation-children-row{grid-column:1/-1;margin:4px 0 8px;padding:12px;border-radius:0;background:var(--bg-light);border:1px dashed rgba(140,106,74,0.3);}
+          .variation-children-row .vcr-header{display:flex;flex-direction:column;gap:2px;margin-bottom:10px;}
+          .variation-children-row .vcr-label{font-size:0.75rem;font-weight:800;color:var(--text-dark);}
+          .variation-children-row .vcr-sub{font-size:0.7rem;color:var(--text-medium);}
+          .variation-children-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;}
+
+          /* ── Step 4: AI estimate vs actual performance (spec item 12) ── */
+          .variation-ai-estimate{padding:10px 0 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+          .variation-ai-estimate .vae-label{font-size:0.62rem;font-weight:800;letter-spacing:0.05em;color:var(--text-light);}
+          .variation-ai-estimate .vae-metrics-row{display:flex;gap:16px;}
+          .variation-ai-estimate .vae-metric{display:flex;flex-direction:column;}
+          .variation-ai-estimate .vae-metric-value{font-size:0.98rem;font-weight:800;color:var(--text-dark);}
+          .variation-ai-estimate .vae-metric-label{font-size:0.62rem;color:var(--text-light);}
+          .variation-ai-estimate .vae-row{display:none;} /* legacy row markup, superseded by vae-metrics-row */
+
+          .variation-performance,.variation-performance-form{margin:0 18px 16px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;gap:4px;background:var(--bg-light);}
+          .variation-performance .vp-label,.variation-performance-form .vp-label{font-size:0.65rem;font-weight:800;letter-spacing:0.04em;color:var(--text-dark);}
+          .variation-performance .vp-actual-tag{font-size:0.58rem;font-weight:800;color:#fff;background:var(--primary);padding:1px 6px;margin-left:6px;letter-spacing:0.03em;}
+          .variation-performance .vp-empty{font-size:0.72rem;color:var(--text-light);}
+          .variation-performance .vp-metrics{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:2px;}
+          .variation-performance .vp-metric{display:flex;flex-direction:column;}
+          .variation-performance .vp-metric-label{font-size:0.6rem;font-weight:700;color:var(--text-light);letter-spacing:0.03em;}
+          .variation-performance .vp-metric-value{font-size:0.82rem;font-weight:800;color:var(--text-dark);}
+          .variation-performance .vp-counts{font-size:0.66rem;color:var(--text-light);}
+          .variation-performance .vp-toggle-btn,.variation-performance-form .vpf-save,.variation-performance-form .vpf-cancel{align-self:flex-start;font-size:0.7rem;font-weight:700;padding:5px 10px;border-radius:0;border:1px solid var(--primary);background:var(--bg-white);color:var(--primary);cursor:pointer;margin-top:4px;}
+          .variation-performance .vp-toggle-btn:hover,.variation-performance-form .vpf-save:hover{background:rgba(140,106,74,0.1);}
+          .variation-performance-form .vpf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:2px;}
+          .variation-performance-form .vpf-grid label{display:flex;flex-direction:column;font-size:0.62rem;font-weight:700;color:var(--text-medium);gap:2px;}
+          .variation-performance-form .vpf-grid input{font-size:0.78rem;padding:4px 6px;border:1px solid var(--border);border-radius:0;background:var(--bg-light);color:var(--text-dark);}
+          .variation-performance-form .vpf-error{font-size:0.68rem;color:var(--error);}
+          .variation-performance-form .vpf-error.hidden{display:none;}
+          .variation-performance-form .vpf-actions{display:flex;gap:8px;}
+          .variation-performance-form .vpf-save{background:var(--primary);color:#fff;}
+          .variation-performance-form .vpf-save:hover{background:var(--primary-dark);}
+          .variation-performance-form .vpf-save:disabled{opacity:0.6;cursor:default;}
+          .variation-performance-form .vpf-cancel{border-color:var(--border);color:var(--text-medium);}
+
+          /* ── Step 4: Creative Performance comparison + insight ── */
+          #performanceComparisonSection{margin-top:1.75rem;}
+          #performanceComparisonSection.hidden{display:none;}
+          #performanceComparisonSection .pc-header{margin-bottom:0.75rem;}
+          #performanceComparisonSection .pc-header h3{margin:0 0 2px;font-size:1rem;}
+          .pc-empty{font-size:0.85rem;color:var(--text-medium);border:1px solid var(--border);background:var(--bg-light);padding:14px 16px;border-radius:0;}
+          .pc-empty .pc-empty-sub{display:block;margin-top:4px;font-size:0.75rem;color:var(--text-light);}
+          .pc-group{border:1px solid var(--border);border-radius:0;padding:12px 14px;margin-bottom:14px;background:var(--bg-white);}
+          .pc-group-title{font-size:0.78rem;font-weight:800;letter-spacing:0.02em;color:var(--text-dark);margin-bottom:8px;display:block;}
+          .pc-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-top:1px solid var(--border);font-size:0.8rem;}
+          .pc-row:first-of-type{border-top:none;}
+          .pc-row .pc-row-label{color:var(--text-dark);font-weight:600;}
+          .pc-row .pc-row-metrics{display:flex;gap:12px;color:var(--text-medium);font-size:0.75rem;}
+          .pc-source-tag{display:inline-block;margin-top:2px;font-size:0.62rem;font-weight:700;letter-spacing:0.03em;color:var(--primary-dark);}
+          .pc-insight{margin-top:10px;padding:8px 10px;background:var(--bg-light);border-left:3px solid var(--primary);font-size:0.78rem;color:var(--text-dark);}
+
+          /* ── Step 5: comparison table, confidence, top-observed, learning ── */
+          .pc-confidence{display:inline-flex;align-items:center;gap:5px;font-size:0.62rem;font-weight:700;letter-spacing:0.03em;padding:2px 8px;border:1px solid var(--border);margin-left:8px;color:var(--text-medium);}
+          .pc-confidence.pc-confidence-limited{color:#8a6d3b;border-color:#e0c88f;background:#fbf5e6;}
+          .pc-confidence.pc-confidence-ok{color:var(--primary-dark);border-color:var(--primary);background:rgba(140,106,74,0.08);}
+          .pc-table-wrap{overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);}
+          table.pc-table{width:100%;border-collapse:collapse;font-size:0.76rem;background:var(--bg-white);}
+          table.pc-table th,table.pc-table td{padding:7px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);}
+          table.pc-table th{font-size:0.62rem;font-weight:800;letter-spacing:0.03em;color:var(--text-light);text-transform:uppercase;background:var(--bg-light);}
+          table.pc-table td{color:var(--text-medium);}
+          table.pc-table td.pc-cell-strongest{color:var(--primary-dark);font-weight:800;background:rgba(140,106,74,0.08);}
+          table.pc-table td.pc-cell-label{color:var(--text-dark);font-weight:700;}
+          table.pc-table td.pc-cell-na{color:var(--text-light);font-style:italic;}
+          .pc-winner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--primary);background:rgba(140,106,74,0.06);padding:10px 12px;margin-bottom:14px;}
+          .pc-winner-label{font-size:0.62rem;font-weight:800;letter-spacing:0.03em;color:var(--primary-dark);}
+          .pc-winner-value{font-size:0.82rem;font-weight:700;color:var(--text-dark);margin-top:2px;}
+          .pc-winner select{font-size:0.72rem;padding:4px 6px;border:1px solid var(--border);background:var(--bg-white);color:var(--text-dark);}
+          tr.pc-row-selected td{background:rgba(140,106,74,0.06);}
+          .pc-selected-tag{display:inline-block;font-size:0.64rem;font-weight:800;letter-spacing:0.02em;color:var(--primary-dark);margin-right:4px;}
+          /* ── STEP 3: Performance Insights (best performer + learn + next variation) ── */
+          #performanceInsightsSection{margin-top:1.75rem;}
+          #performanceInsightsSection.hidden{display:none;}
+          #performanceInsightsSection .pc-header h3{margin:0 0 2px;font-size:1rem;}
+          .pi-card{border:1px solid var(--primary);background:var(--bg-white);padding:14px 16px;}
+          .pi-empty{font-size:0.85rem;color:var(--text-medium);border:1px solid var(--border);background:var(--bg-light);padding:14px 16px;}
+          .pi-trophy-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+          .pi-trophy-label{font-size:0.68rem;font-weight:800;letter-spacing:0.03em;color:var(--primary-dark);}
+          .pi-winner-name{font-family:var(--font-serif,serif);font-size:1rem;font-weight:700;color:var(--text-dark);}
+          .pi-metrics{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px;}
+          .pi-metrics span{font-size:0.8rem;color:var(--text-medium);}
+          .pi-metrics b{color:var(--text-dark);font-weight:800;}
+          .pi-section-label{font-size:0.66rem;font-weight:800;letter-spacing:0.03em;color:var(--text-light);display:block;margin-top:10px;}
+          .pi-learned,.pi-recommendation{font-size:0.8rem;color:var(--text-dark);margin-top:3px;line-height:1.45;}
+          .pi-next-btn{margin-top:12px;font-size:0.72rem;font-weight:700;padding:7px 14px;border-radius:0;border:1px solid var(--primary);background:var(--primary);color:#fff;cursor:pointer;}
+          .pi-next-btn:hover{background:var(--primary-dark);}
+          .pi-next-btn:disabled{opacity:0.5;cursor:default;}
+          /* ── STEP 4: Smart Performance Decision — category winner cards ── */
+          .pd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+          .pd-card{border:1px solid var(--border);background:var(--bg-white);padding:10px 12px;}
+          .pd-cat-label{font-size:0.62rem;font-weight:800;letter-spacing:0.03em;color:var(--primary-dark);display:block;}
+          .pd-cat-name{font-family:var(--font-serif,serif);font-size:0.92rem;font-weight:700;color:var(--text-dark);margin-top:4px;}
+          .pd-cat-value{font-size:0.78rem;color:var(--text-medium);margin-top:2px;}
+          .pd-tied{font-size:0.78rem;color:var(--text-medium);margin-top:6px;}
+          #creativeLearningSection{margin-top:1.75rem;}
+          #creativeLearningSection.hidden{display:none;}
+          #creativeLearningSection .pc-header h3{margin:0 0 2px;font-size:1rem;}
+          .cl-patterns{border:1px solid var(--border);background:var(--bg-white);padding:12px 14px;}
+          .cl-patterns ul{margin:0;padding-left:18px;}
+          .cl-patterns li{font-size:0.8rem;color:var(--text-dark);margin-bottom:6px;line-height:1.4;}
+          .cl-empty{font-size:0.85rem;color:var(--text-medium);border:1px solid var(--border);background:var(--bg-light);padding:14px 16px;}
+          .cl-context-banner{display:block;font-size:0.75rem;color:var(--primary-dark);background:rgba(140,106,74,0.08);border:1px solid var(--primary);padding:8px 10px;margin-top:10px;}
+          .cl-next{border:1px solid var(--primary);background:var(--bg-white);padding:10px 12px;margin-top:12px;}
+          .cl-next-label{font-size:0.62rem;font-weight:800;letter-spacing:0.03em;color:var(--primary-dark);display:block;margin-bottom:4px;}
+          .cl-next-text{font-size:0.82rem;color:var(--text-dark);line-height:1.45;}
+        </style>
+        <div id="variationsSection" class="hidden">
+          <div class="variations-grid-header">
+            <h3>Compare Your Creative Directions</h3>
+            <span class="asset-note ai-recommendation-banner" style="margin:0;" id="variationsHint"><span class="ai-rec-label">AI Recommendation</span>Three different ways to advertise the same beauty product — use any recommendation as guidance, you can still choose any creative direction.</span>
+          </div>
+          <div class="variations-grid" id="creativeVariationsGrid"></div>
+
+          <!-- Shown once any card's "Select Concept" is clicked. Purely a
+               UI affordance — selecting never triggers generation by itself. -->
+          <div id="conceptRefineBar">
+            <div class="crb-text">
+              <span class="crb-selected" id="refineBarSelectedLabel">✓ Concept selected</span>
+              <span class="crb-sub">Keep this creative direction and explore new executions.</span>
+            </div>
+            <span id="refineProgressText" class="hidden"></span>
+            <button type="button" id="createMoreLikeThisBtn" disabled>Create More Like This</button>
+          </div>
+
+          <!-- Selected Direction — spec item 2. Text comes from existing
+               concept metadata only (badge/direction tags + a static
+               per-concept description); nothing here is AI-generated. -->
+          <div id="selectedDirectionSection">
+            <span class="sd-label">Selected Direction</span>
+            <span class="sd-name" id="selectedDirectionName">PRODUCT HERO</span>
+            <span class="sd-tags" id="selectedDirectionTags">Product-first · Luxury · Editorial</span>
+            <span class="sd-desc" id="selectedDirectionDesc"></span>
+          </div>
+
+          <!-- Refinements — spec item 3/4: exactly four simple choices,
+               no advanced/technical controls. -->
+          <div id="refinementChoicesPanel">
+            <span class="rc-title">Refinements</span>
+            <div class="rc-grid">
+              <label class="rc-field">Product Focus
+                <select id="refineProductFocus">
+                  <option value="more-product">More Product</option>
+                  <option value="balanced" selected>Balanced</option>
+                  <option value="more-environment">More Environment</option>
+                </select>
+              </label>
+              <label class="rc-field">Visual Treatment
+                <select id="refineVisualTreatment">
+                  <option value="keep" selected>Keep Direction</option>
+                  <option value="more-premium">More Premium</option>
+                  <option value="more-experimental">More Experimental</option>
+                </select>
+              </label>
+              <label class="rc-field">Composition
+                <select id="refineComposition">
+                  <option value="keep" selected>Keep Composition</option>
+                  <option value="new">New Composition</option>
+                </select>
+              </label>
+              <label class="rc-field">Setting
+                <select id="refineSetting">
+                  <option value="keep" selected>Keep Setting</option>
+                  <option value="new">New Setting</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ STEP 3: PERFORMANCE INSIGHTS ============
+             Best performer (real data only) + plain-language "what Beaulix
+             learned" + "Create Next Variation" action. Populated by
+             refreshPerformanceComparison() in generator-init.js. -->
+        <div id="performanceInsightsSection" class="hidden">
+          <div class="pc-header">
+            <h3>Beaulix Performance Decision</h3>
+            <span class="asset-note" style="margin:0;">Based only on actual campaign data you've entered — not a guaranteed best creative.</span>
+          </div>
+          <div id="performanceInsightsBody"></div>
+        </div>
+
+        <!-- ============ STEP 4: CREATIVE PERFORMANCE COMPARISON ============
+             Populated by refreshPerformanceComparison() in generator-init.js,
+             purely from REAL performance records the user has saved via
+             each card's "Add Performance Data" panel — never AI estimates,
+             never fabricated numbers. -->
+        <div id="performanceComparisonSection" class="hidden">
+          <div class="pc-header">
+            <h3>Creative Performance</h3>
+            <span class="asset-note" style="margin:0;">Compare campaign results across your creatives and variations.</span>
+          </div>
+          <div id="performanceComparisonBody"></div>
+        </div>
+
+        <!-- ============ STEP 5: BEAULIX CREATIVE LEARNING ============
+             Product-level (cross-session) observed patterns, from REAL
+             stored performance only. Populated by refreshCreativeLearning()
+             in generator-init.js. Never an ML model — transparent
+             rule-based aggregation only (spec item 15). -->
+        <div id="creativeLearningSection" class="hidden">
+          <div class="pc-header">
+            <h3>Beaulix Creative Learning</h3>
+            <span class="asset-note" style="margin:0;">Patterns observed from this product's recorded campaign results.</span>
+          </div>
+          <div id="creativeLearningBody"></div>
+        </div>
+
+        <!-- ============ REFINEMENTS (executions of a selected concept) ============ -->
+        <div id="refinementsSection">
+          <div class="refinements-lineage">
+            <span class="rl-tag" id="refinementsParentTag">ORIGINAL DIRECTION</span>
+            <span class="rl-arrow">↓</span>
+            <span class="rl-tag">MORE LIKE THIS</span>
+          </div>
+          <h4 id="refinementsHeading">Refinements</h4>
+          <!-- Variation history — spec item 7: a simple sequence, not a
+               timeline component. Rebuilt from the cards below. -->
+          <div id="variationHistoryBar"></div>
+          <div class="variations-grid" id="creativeRefinementsGrid"></div>
+        </div>
 
       <div class="preview-panel">
-        <div class="preview-header"><h3>Preview</h3></div>
+        <div class="preview-header"><h3>Creative Preview</h3></div>
         <div class="preview-content">
-          <div class="active-profile-badge"><span class="badge-label">Active Profile:</span><span class="badge-value" id="activeDecisionDisplay">-</span></div>
+          <div class="active-profile-badge" style="display:none;"><span class="badge-label">Creative Setup:</span><span class="badge-value" id="activeDecisionDisplay">-</span></div>
           <div class="preview-box" id="previewBox">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <p>Your generated visual will appear here</p>
           </div>
           <div class="generated-output hidden" id="generatedOutput">
-            <div class="decision-mapping" id="decisionMapping">Generated using: <strong id="mappingConcern">-</strong> + <strong id="mappingSkin">-</strong> + <strong id="mappingFunnel">-</strong> + <strong id="mappingCategory">-</strong></div>
+            <div class="decision-mapping" id="decisionMapping" style="display:none;">Generated using: <strong id="mappingConcern">-</strong> + <strong id="mappingSkin">-</strong> + <strong id="mappingFunnel">-</strong> + <strong id="mappingCategory">-</strong></div>
             <div class="visual-container placeholder-mode" id="visualContainer">
               <span class="luxe-badge" id="luxeBadge">-</span>
               <div id="visualContent" class="visual-placeholder">
@@ -329,7 +784,10 @@
             </div>
             <div id="improvementBanner" class="improvement-banner hidden"><div><div class="improvement-title">Your creative choices improved performance!</div><div class="improvement-details" id="improvementDetails"></div></div></div>
             <div class="action-buttons">
-              <button class="btn-action" id="regenerateBtn"><span id="regenerateText">Regenerate All</span></button>
+              <button class="btn-action" id="regenerateBtn"><span id="regenerateText">Regenerate</span></button>
+              <button class="btn-action" id="createVariationBtn">Create Variation</button>
+              <button class="btn-action" id="changeStyleBtn">Change Style</button>
+              <button class="btn-action" id="changeFormatBtn">Change Format</button>
               <button class="btn-action" id="downloadBtn" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span id="downloadText">Download Visual</span></button>
             </div>
             <div class="model-source-note" id="modelSourceNote"></div>
@@ -342,10 +800,10 @@
   <footer><div class="footer-copyright">© 2026 Beaulix. All rights reserved.</div></footer>
   <div id="toastContainer"></div>
 
-  <script src="generator-init.js"></script>
+  <script src="generator-init.js?v=copy-v4"></script>
 
   <!-- ================= FIREBASE + CLOUDINARY AUTH & HISTORY ================= -->
-  <script type="module" src="generator-module.js"></script>
+  <script type="module" src="generator-module.js?v=copy-v4"></script>
 
 </body>
 </html>

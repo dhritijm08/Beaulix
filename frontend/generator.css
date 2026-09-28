@@ -28,14 +28,40 @@
     .status-dot.offline { background: var(--error); }
     .status-dot.checking { background: var(--warning); }
 
-    .generator-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-    .input-panel, .preview-panel { background: white; border: 1px solid var(--border); }
+    /* Creative Preview (the old single-image preview column) has been
+       retired from the Create UI — the three Compare cards already show
+       the generated creative, so the workflow is now a single column. */
+    .generator-container { display: block; }
+    .input-panel { background: var(--bg-light); border: 1px solid var(--border); margin-bottom: 2rem; }
+    .preview-panel { display: none; }
+    /* Marketing Intelligence configuration is no longer part of the
+       pre-generation Create form — its predictions still run silently and
+       surface post-generation (AI Recommendation / Creative Performance /
+       Creative Learning). The panel and its "Continue" flow stay in the
+       DOM (untouched) so nothing that reads their values breaks. */
+    #step1Header, #step1Content { display: none; }
+
+    /* Advanced Options (Product Color / Scene Description / Brand Style
+       Override / Include Human Face) is retired from the Create form —
+       the creative-direction system decides human presence automatically.
+       Left in the DOM (untouched) so nothing that reads these values
+       breaks; ensureCreativeDefaults() already fills sensible defaults
+       for all of them. */
+    #step2Header, #step2Content { display: none; }
     .panel-header { padding: 1.2rem 1.5rem; background: var(--bg-light); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; cursor: pointer; }
     .panel-header-left { display: flex; align-items: center; gap: 10px; }
     .collapse-icon { transition: transform 0.3s ease; font-size: 0.7rem; }
     .panel-header.collapsed .collapse-icon { transform: rotate(-90deg); }
     .panel-content { padding: 1.5rem; }
     .panel-content.collapsed { display: none; }
+
+    /* Compare Creative Directions and its companion sections (performance
+       insights/comparison, learning, refinements) are full-width blocks
+       within the generator-container grid — not confined to the sidebar
+       column — so the creative comparison gets the whole page's width. */
+    #variationsSection, #performanceInsightsSection, #performanceComparisonSection,
+    #creativeLearningSection, #refinementsSection { grid-column: 1 / -1; }
+
 
     .profile-summary { background: var(--bg-light); padding: 1rem 1.2rem; border: 1px solid var(--border); margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
     .profile-tag { background: white; padding: 0.3rem 0.8rem; border: 1px solid var(--border); font-size: 0.75rem; font-weight: 500; color: var(--primary); }
@@ -311,3 +337,124 @@
       color: var(--text-light);
       line-height: 1.4;
     }
+
+/* ================= V2 CREATIVE-FIRST STUDIO ADDITIONS ================= */
+
+.studio-hero { text-align: center; max-width: 640px; margin: 0 auto 2.5rem; padding: 0 1rem; }
+.studio-hero-title { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 600; color: var(--text-dark); margin: 0 0 0.6rem; }
+.studio-hero-sub { font-size: 1rem; color: var(--text-medium); margin: 0; }
+
+.creative-flow { max-width: 960px; margin: 0 auto 2.5rem; display: flex; flex-direction: column; gap: 2rem; }
+
+.flow-block-title {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600;
+  color: var(--text-dark); margin-bottom: 1rem;
+}
+.flow-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-family: 'Inter', sans-serif;
+  font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+
+/* Brand asset upload cards */
+.asset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.asset-card { position: relative; background: var(--bg-white); border: 1px dashed var(--border); padding: 1rem; text-align: center; transition: var(--transition); }
+.asset-card:hover { border-color: var(--primary-light); }
+.asset-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.asset-drop { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 1.2rem 0.5rem; color: var(--primary); }
+.asset-drop-label { font-weight: 600; font-size: 0.9rem; color: var(--text-dark); }
+.asset-drop-hint { font-size: 0.75rem; color: var(--text-light); }
+.asset-preview { position: relative; }
+.asset-preview img { width: 100%; max-height: 140px; object-fit: contain; background: var(--bg-light); }
+.asset-remove {
+  position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: rgba(17,17,17,0.75); color: #fff; cursor: pointer; font-size: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.asset-card-label { margin-top: 0.6rem; font-size: 0.8rem; font-weight: 600; color: var(--text-medium); letter-spacing: 0.3px; }
+.asset-optional { font-weight: 400; color: var(--text-light); text-transform: none; letter-spacing: 0; }
+.asset-note { margin-top: 1rem; font-size: 0.78rem; color: var(--text-light); line-height: 1.5; }
+
+/* Content-type + style cards (reuse funnel/ratio card visual language) */
+.content-type-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+.content-type-option { cursor: pointer; }
+.content-type-option input { display: none; }
+.content-type-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 1.1rem 0.5rem; background: var(--bg-white); border: 1px solid var(--border); text-align: center; transition: var(--transition);
+}
+.content-type-card:hover { border-color: var(--primary-light); }
+.content-type-option input:checked + .content-type-card { border-color: var(--primary); background: linear-gradient(135deg, rgba(140,106,74,0.05), rgba(140,106,74,0.1)); }
+.ct-icon { font-size: 1.4rem; color: var(--primary); }
+.ct-label { font-size: 0.82rem; font-weight: 600; color: var(--text-dark); }
+
+.style-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+.style-option { cursor: pointer; }
+.style-option input { display: none; }
+.style-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 1rem 0.5rem; background: var(--bg-white); border: 1px solid var(--border); text-align: center; transition: var(--transition);
+}
+.style-card:hover { border-color: var(--primary-light); }
+.style-option input:checked + .style-card { border-color: var(--primary); background: linear-gradient(135deg, rgba(140,106,74,0.05), rgba(140,106,74,0.1)); }
+.style-swatch { width: 34px; height: 34px; border-radius: 50%; display: block; }
+.style-swatch--luxury    { background: linear-gradient(135deg, #C9A876, #6B4F37); }
+.style-swatch--minimal   { background: linear-gradient(135deg, #F1ECE8, #B5A89F); }
+.style-swatch--editorial { background: linear-gradient(135deg, #222, #8A8A8A); }
+.style-swatch--bold      { background: linear-gradient(135deg, #E63946, #F4A300); }
+.style-swatch--natural   { background: linear-gradient(135deg, #8FA986, #C9BFA0); }
+.style-swatch--glam      { background: linear-gradient(135deg, #7A2E4A, #D4AF37); }
+.style-swatch--soft      { background: linear-gradient(135deg, #F3D6D6, #E8B9C4); }
+.style-swatch--ugc       { background: linear-gradient(135deg, #B5A89F, #FAF7F4); border: 1px solid var(--border); }
+.style-label { font-size: 0.8rem; font-weight: 600; color: var(--text-dark); }
+
+/* Required-field hint on About Your Product header */
+.panel-header-req { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.75rem; color: var(--text-light); margin-left: 6px; }
+
+/* Nested "Advanced Marketing Insights" accordion inside step1 */
+.inner-panel-header { margin: 1.25rem 0 0; background: var(--bg-light); border: 1px solid var(--border); }
+.inner-panel-header.hidden { display: none; }
+
+.advanced-hint { font-size: 0.8rem; color: var(--text-light); margin: 0 0 1.2rem; line-height: 1.5; }
+
+/* Action buttons row now has more entries */
+.action-buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.action-buttons .btn-action { flex: 1 1 auto; min-width: 120px; }
+
+@media (max-width: 900px) {
+  .asset-grid { grid-template-columns: 1fr; }
+  .content-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .style-grid { grid-template-columns: repeat(2, 1fr); }
+  .studio-hero-title { font-size: 1.8rem; }
+}
+
+/* Step 10 — historical-learning strategy label + explanation on each
+   generated variation card (LEARNED DIRECTION / LEARNED OPTIMIZATION /
+   EXPLORATION). Makes the learning strategy that produced each creative
+   visually verifiable at a glance, without altering the learning logic
+   itself (see generator-init.js buildLearningSlots). */
+.variation-strategy-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+.variation-strategy-badge.vs-exploration {
+  background: linear-gradient(135deg, #5B7B9A, #3E5A78);
+}
+.variation-strategy-explanation {
+  display: block;
+  margin: 4px 0 2px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-medium);
+  font-style: italic;
+}
