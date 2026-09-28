@@ -1,7 +1,7 @@
 # server.py
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader
@@ -11,6 +11,7 @@ import uvicorn
 import os
 import logging
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -62,6 +63,109 @@ def require_api_key(key: str = Depends(_API_KEY_HEADER)):
         return
     if key != _EXPECTED_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing X-Beaulix-API-Key")
+
+# ── Firebase ID-token auth (browser-facing routes) ─────────────────────
+# The browser authenticates with its Firebase Auth ID token
+# (Authorization: Bearer <token>). No shared secret ever reaches the browser.
+# Verification uses the already-pinned google-auth package and Google's public
+# signing certs — no service-account secret or firebase-admin needed.
+_FIREBASE_PROJECT_ID = os.getenv("BEAULIX_FIREBASE_PROJECT_ID", "")
+
+
+def _firebase_config_error(project_id: str, is_production: bool):
+    """Return a fatal-config message, or None if the configuration is acceptable."""
+    if not project_id and is_production:
+        return (
+            "FATAL: BEAULIX_FIREBASE_PROJECT_ID is not set in production.\n"
+            "Browser-facing endpoints cannot verify Firebase ID tokens without it.\n"
+            "Set it to your Firebase project id before starting the server.\n"
+        )
+    return None
+
+
+_fb_cfg_err = _firebase_config_error(_FIREBASE_PROJECT_ID, _is_production)
+if _fb_cfg_err:
+    _sys.stderr.write(_fb_cfg_err)
+    _sys.exit(1)
+
+
+class _CachedCertRequest:
+    """google-auth transport that caches successful GETs (Google's public certs)
+    for a short TTL, so token verification doesn't hit Google on every request."""
+
+    def __init__(self, ttl_seconds: float = 1800.0, timeout: float = 10.0):
+        from google.auth.transport import requests as _g_requests
+        self._inner = _g_requests.Request()
+        self._ttl = ttl_seconds
+        self._timeout = timeout
+        self._cache = {}
+
+    def __call__(self, url, method="GET", body=None, headers=None, timeout=None, **kwargs):
+        now = time.monotonic()
+        hit = self._cache.get(url) if method == "GET" else None
+        if hit and now - hit[0] < self._ttl:
+            return hit[1]
+        resp = self._inner(url, method=method, body=body, headers=headers,
+                           timeout=timeout or self._timeout, **kwargs)
+        if method == "GET" and getattr(resp, "status", None) == 200:
+            self._cache[url] = (now, resp)
+        return resp
+
+
+_cert_request = None
+
+
+def _verify_firebase_id_token(token: str) -> dict:
+    """Verify signature, expiry, audience and issuer; return the claims dict.
+    Raises ValueError on any invalid token. Patched in unit tests."""
+    global _cert_request
+    from google.oauth2 import id_token as _g_id_token
+    if _cert_request is None:
+        _cert_request = _CachedCertRequest()
+    # audience=<project id> is enforced by google-auth (signature/exp/iat/aud).
+    claims = _g_id_token.verify_firebase_token(
+        token, _cert_request, audience=_FIREBASE_PROJECT_ID
+    )
+    # google-auth does NOT check the issuer for Firebase tokens — do it here.
+    if claims.get("iss") != f"https://securetoken.google.com/{_FIREBASE_PROJECT_ID}":
+        raise ValueError("wrong issuer")
+    sub = claims.get("sub")
+    if not isinstance(sub, str) or not sub or len(sub) > 128:
+        raise ValueError("missing subject")
+    auth_time = claims.get("auth_time")
+    if isinstance(auth_time, (int, float)) and auth_time > time.time() + 300:
+        raise ValueError("auth_time in the future")
+    return claims
+
+
+def require_firebase_user(request: Request, authorization: Optional[str] = Header(default=None)) -> str:
+    """FastAPI dependency — requires a valid Firebase ID token.
+
+    Returns the authenticated Firebase UID (also stored on request.state.firebase_uid).
+    The raw token is never logged, stored or returned. Fails closed.
+    """
+    if not _FIREBASE_PROJECT_ID:
+        logger.error("BEAULIX_FIREBASE_PROJECT_ID is not configured — rejecting request.")
+        raise HTTPException(status_code=503, detail="Authentication is not configured on the server.")
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header.")
+    parts = authorization.split(" ")
+    if len(parts) != 2 or parts[0].lower() != "bearer" or not parts[1].strip():
+        raise HTTPException(status_code=401, detail="Malformed Authorization header.")
+    try:
+        claims = _verify_firebase_id_token(parts[1].strip())
+    except Exception as e:  # noqa: BLE001 — any failure means reject
+        from google.auth.exceptions import TransportError
+        if isinstance(e, TransportError):
+            logger.error("Firebase cert fetch failed: %s", type(e).__name__)
+            raise HTTPException(status_code=503, detail="Authentication service temporarily unavailable.")
+        # Log only the exception type — never the token or its contents.
+        logger.info("Firebase ID token rejected: %s", type(e).__name__)
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase ID token.")
+    uid = claims["sub"]
+    request.state.firebase_uid = uid
+    return uid
+
 
 # model is intentionally NOT initialized here — it's created inside lifespan()
 # so the port binds first and Render detects the server before RAM-heavy loading.
@@ -284,7 +388,7 @@ def health():
     }
 
 
-@app.post("/predict", dependencies=[Depends(require_api_key)])
+@app.post("/predict", dependencies=[Depends(require_firebase_user)])
 @limiter.limit("30/minute")
 async def predict(request: Request, body: PredictionRequest):
     if model is None:
@@ -339,7 +443,7 @@ class CategoryClassifyRequest(BaseModel):
     image_url: str
 
 
-@app.post("/classify-product-category", dependencies=[Depends(require_api_key)])
+@app.post("/classify-product-category", dependencies=[Depends(require_firebase_user)])
 @limiter.limit("30/minute")
 async def classify_product_category(request: Request, body: CategoryClassifyRequest):
     """Second-pass product-category resolution from the ACTUAL uploaded
@@ -361,7 +465,7 @@ async def classify_product_category(request: Request, body: CategoryClassifyRequ
     return JSONResponse(content={"category": category})
 
 
-@app.post("/ad-copy", dependencies=[Depends(require_api_key)])
+@app.post("/ad-copy", dependencies=[Depends(require_firebase_user)])
 @limiter.limit("60/minute")
 async def ad_copy_endpoint(request: Request, body: PredictionRequest):
     """
