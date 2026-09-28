@@ -138,11 +138,60 @@ AD_COPY_BASE_HEADLINES: dict = {
     "bodycare":  "Skin You'll Love to Touch",
 }
 
+# ── Product-category noun ─────────────────────────────────────────────
+# Used to keep generic (funnel/direction-level) copy templates honest about
+# what the product actually is, instead of hardcoding "skin"/"glowing" into
+# text that also gets used for haircare, fragrance, etc.
+AD_COPY_CATEGORY_NOUN: dict = {
+    "skincare":  "skin",
+    "makeup":    "look",
+    "haircare":  "hair",
+    "fragrance": "scent",
+    "bodycare":  "skin",
+}
+
 AD_COPY_BASE_DESCRIPTIONS: dict = {
-    "awareness":     "Explore our {category} collection — crafted for real results and real skin.",
+    "awareness":     "Explore our {category} collection — crafted for real results, real {noun}.",
     "consideration": "Join thousands who switched to our {category} range. See the science behind it.",
     "conversion":    "Limited offer on our best-selling {category}. Free shipping. Easy returns.",
-    "retention":     "Your skin knows best. Restock your favourite {category} and keep glowing.",
+    "retention":     "Your {noun} knows best. Restock your favourite {category} and keep loving it.",
+}
+
+# ── Creative-direction copy (Beaulix direction-aware copy) ────────────
+# The PRODUCT/CATEGORY decides what the copy is allowed to talk about
+# (see AD_COPY_BASE_HEADLINES / AD_COPY_CATEGORY_NOUN above and the
+# category-scoped decision_attribute modifiers below). These dictionaries
+# decide only HOW that same product is talked about for each of the three
+# creative directions, so headlines/bodies genuinely differ across
+# Product Hero / Beauty Lifestyle / Social Concept for the same product.
+AD_COPY_LIFESTYLE_HEADLINES: dict = {
+    "skincare":  "Make Skincare Your Moment",
+    "makeup":    "Your Look, Your Rules",
+    "haircare":  "Hair Care, Made Routine",
+    "fragrance": "Find Your Everyday Scent",
+    "bodycare":  "Make Self-Care a Habit",
+}
+
+AD_COPY_SOCIAL_HOOKS: dict = {
+    "skincare":  "YOUR SKIN CALLED.",
+    "makeup":    "THIS LOOK HITS DIFFERENT.",
+    "haircare":  "YOUR HAIR, LEVELED UP.",
+    "fragrance": "THIS SCENT IS A WHOLE VIBE.",
+    "bodycare":  "YOUR SKIN, BUT BETTER.",
+}
+
+AD_COPY_LIFESTYLE_DESCRIPTIONS: dict = {
+    "awareness":     "Real {category}, made for your everyday {noun} routine.",
+    "consideration": "See how our {category} fits into real, everyday routines.",
+    "conversion":    "Make it part of your routine — shop {category} today.",
+    "retention":     "Still part of your routine? Restock your {category} favourites.",
+}
+
+AD_COPY_SOCIAL_DESCRIPTIONS: dict = {
+    "awareness":     "The {category} everyone's talking about right now.",
+    "consideration": "Why is this {category} all over your feed? Find out.",
+    "conversion":    "Don't scroll past this — shop the {category} now.",
+    "retention":     "Back again? Your {category} favourites are trending.",
 }
 
 AD_COPY_BASE_CTAS: dict = {
