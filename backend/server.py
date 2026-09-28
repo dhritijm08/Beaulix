@@ -412,7 +412,7 @@ async def predict(request: Request, body: PredictionRequest):
             'ctr': float(result.get('ctr', 0)),
             'conversion_rate': float(result.get('conversion_rate', 0)),
             'engagement_rate': float(result.get('engagement_rate', 0)),
-            'confidence_score': float(result.get('confidence_score', 0)),
+            'confidence_score': float(result.get('confidence_score') or 0),
             'similar_profiles': int(result.get('similar_profiles', 0)),
             'benchmarks': result.get('benchmarks', {}),
             'confidence_interval': result.get('confidence_interval', {

@@ -3251,8 +3251,6 @@
         // background without blocking generation, since only ad copy is
         // required for the creative itself.
         console.log('[Beaulix] fetching required ad copy before generation...');
-        runMarketingAnalysis({ silent: true })
-          .catch(e => { console.warn('[Beaulix] background marketing analysis failed (non-blocking; only affects AI estimate panel):', e); return false; });
 
         // Step 10 — historical learning informing this generation. This
         // must run BEFORE directionKeysForBatch below, since each slot's
