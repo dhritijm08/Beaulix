@@ -259,6 +259,12 @@ app.add_middleware(
     expose_headers=[],
 )
 
+# ── Meta Ads integration (Phase 2A: OAuth connect only) ─────────────────
+# Additive only — does not touch /predict, /ad-copy, /generate, classification,
+# or any existing route above. See docs/meta-integration.md.
+from integrations.meta.routes import router as _meta_integration_router  # noqa: E402
+app.include_router(_meta_integration_router)
+
 
 class PredictionRequest(BaseModel):
     product_category:     str

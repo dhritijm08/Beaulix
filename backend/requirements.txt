@@ -20,3 +20,9 @@ slowapi==0.1.9
 Pillow==11.0.0
 pytesseract==0.3.13
 requests==2.32.3
+
+# Meta Ads integration (Phase 2A) — server-side Firestore Admin access only,
+# for storing platform connection metadata + tokens. Also brings in
+# google-auth, which server.py's Firebase ID-token verification already
+# depends on at runtime.
+firebase-admin==7.7.0
